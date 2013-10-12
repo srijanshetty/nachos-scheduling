@@ -28,3 +28,6 @@ test/sort
 test/testexec
 test/testyield
 test/vectorsum
+bin/coff2noff
+test/forkjoin_hard
+test/testloop
