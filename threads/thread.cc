@@ -466,6 +466,7 @@ Thread::ResetReturnValue ()
 void
 Thread::Schedule()
 {
+    DEBUG('t', "Scheduling thread %s\n" , this->getName());
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
     scheduler->ReadyToRun(this);        // ReadyToRun assumes that interrupts
                                         // are disabled!

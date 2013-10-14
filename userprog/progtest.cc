@@ -14,6 +14,14 @@
 #include "addrspace.h"
 #include "synch.h"
 
+void
+BatchStartFunction(int dummy)
+{
+   currentThread->Startup();
+   DEBUG('b', "Now running %s thread\n", currentThread->getName());
+   machine->Run();
+}
+
 //----------------------------------------------------------------------
 // StartProcess
 // 	Run a user program.  Open the executable, load it into
@@ -27,8 +35,8 @@ StartProcess(char *filename)
     AddrSpace *space;
 
     if (executable == NULL) {
-	printf("Unable to open file %s\n", filename);
-	return;
+        printf("Unable to open file %s\n", filename);
+        return;
     }
     space = new AddrSpace(executable);    
     currentThread->space = space;
@@ -40,8 +48,106 @@ StartProcess(char *filename)
 
     machine->Run();			// jump to the user progam
     ASSERT(FALSE);			// machine->Run never returns;
-					// the address space exits
-					// by doing the syscall "exit"
+    // the address space exits
+    // by doing the syscall "exit"
+}
+
+
+//----------------------------------------------------------------------
+// RunBatchProcess 
+// Run a batch of processes
+//----------------------------------------------------------------------
+
+void
+RunBatchProcess(char *filename) {
+    // Open the given executable
+    OpenFile *executable = fileSystem->Open(filename);
+    if (executable == NULL) {
+        printf("Unable to open file %s\n", filename);
+        return;
+    }
+
+    // Compute the length of the file and then read that much from the file
+    int filelength = executable->Length();
+    char buffer[filelength];
+    OpenFile *programfile;
+    AddrSpace *space;
+    Thread *thread;
+
+    // Read the executable
+    executable->ReadAt(buffer, (filelength-1), 0);
+    DEBUG('b', "running batch jobs from %s of length %d\n", filename, filelength );
+   
+    // Create threads and enque them
+    int i=0, k=0;
+    char name[100];
+    char priority[10];
+
+    // For the first thread obtain the priority of the thread and it's name, 
+    // overwrite the current thread's address space with this program
+    // and then go on to create new threads for the other processes
+    while(buffer[i]!='\n'){
+        if(buffer[i]!=' '){
+            name[k]=buffer[i];
+            ++i; ++k;
+        } else {
+            name[k]='\0';
+            k=0; ++i;
+            while(buffer[i]!='\n') {
+                priority[k]=buffer[i];
+                ++i; ++k;
+            }
+            priority[k]='\0';
+            break;
+        }
+    }
+
+    DEBUG('b', "%s %s\n", name, priority);
+
+    // This is for the first thread, the current thread is overwritten
+    // in the case of the first thread
+    programfile = fileSystem->Open(name);
+    ASSERT(programfile != NULL);
+    space = new AddrSpace(programfile);    
+    currentThread->space = space;
+    space->InitRegisters();		// set the initial register values
+    space->RestoreState();		// load page table register
+    delete programfile;			// close file
+
+    // For the other threads, we create new thread
+    k=0; ++i;
+    while(i<filelength){
+        if(buffer[i]!=' '){
+            name[k]=buffer[i];
+            ++i; ++k;
+        } else {
+            name[k]='\0';
+            k=0; ++i;
+            while(buffer[i]!='\n') {
+                priority[k]=buffer[i];
+                ++i; ++k;
+            }
+            priority[k]='\0';
+            k=0; ++i;
+
+            // Creating a new thread and enquing it
+            DEBUG('b', "%s %s\n", name, priority);
+
+            programfile = fileSystem->Open(("%s", name));
+            ASSERT(programfile != NULL);
+            thread = new Thread(name);
+            thread->space = new AddrSpace(programfile);  // Duplicates the address space
+            thread->space->InitRegisters();		// set the initial register values
+            thread->space->RestoreState();		// load page table register
+            thread->StackAllocate(BatchStartFunction, 0);	// Make it ready for a later context switch
+            thread->Schedule();
+            delete programfile;			// close file
+        }
+    }
+
+    // Yield the currentThread as soon as we reach here, the scheduler then takes over
+    // the scheduling of the threads
+    currentThread->Yield();
 }
 
 // Data structures needed for the console test.  Threads making
@@ -65,7 +171,7 @@ static void WriteDone(int arg) { writeDone->V(); }
 //	the output.  Stop when the user types a 'q'.
 //----------------------------------------------------------------------
 
-void 
+    void 
 ConsoleTest (char *in, char *out)
 {
     char ch;
@@ -73,12 +179,12 @@ ConsoleTest (char *in, char *out)
     console = new Console(in, out, ReadAvail, WriteDone, 0);
     readAvail = new Semaphore("read avail", 0);
     writeDone = new Semaphore("write done", 0);
-    
+
     for (;;) {
-	readAvail->P();		// wait for character to arrive
-	ch = console->GetChar();
-	console->PutChar(ch);	// echo it!
-	writeDone->P() ;        // wait for write to finish
-	if (ch == 'q') return;  // if q, quit
+        readAvail->P();		// wait for character to arrive
+        ch = console->GetChar();
+        console->PutChar(ch);	// echo it!
+        writeDone->P() ;        // wait for write to finish
+        if (ch == 'q') return;  // if q, quit
     }
 }
