@@ -18,7 +18,7 @@ void
 BatchStartFunction(int dummy)
 {
    currentThread->Startup();
-   DEBUG('b', "Now running %s thread\n", currentThread->getName());
+   DEBUG('b', "Running thread \"%d\" for the first time\n", currentThread->GetPID());
    machine->Run();
 }
 
@@ -71,83 +71,66 @@ RunBatchProcess(char *filename) {
     int filelength = executable->Length();
     char buffer[filelength];
     OpenFile *programfile;
-    AddrSpace *space;
     Thread *thread;
 
     // Read the executable
     executable->ReadAt(buffer, (filelength-1), 0);
-    DEBUG('b', "running batch jobs from %s of length %d\n", filename, filelength );
+    DEBUG('b', "running batch jobs from \"%s\"\n", filename);
    
     // Create threads and enque them
     int i=0, k=0;
     char name[100];
     char priority[10];
 
-    // For the first thread obtain the priority of the thread and it's name, 
-    // overwrite the current thread's address space with this program
-    // and then go on to create new threads for the other processes
-    while(buffer[i]!='\n'){
-        if(buffer[i]!=' '){
-            name[k]=buffer[i];
-            ++i; ++k;
-        } else {
-            name[k]='\0';
-            k=0; ++i;
-            while(buffer[i]!='\n') {
-                priority[k]=buffer[i];
-                ++i; ++k;
-            }
-            priority[k]='\0';
-            break;
-        }
-    }
-
-    DEBUG('b', "%s %s\n", name, priority);
-
-    // This is for the first thread, the current thread is overwritten
-    // in the case of the first thread
-    programfile = fileSystem->Open(name);
-    ASSERT(programfile != NULL);
-    space = new AddrSpace(programfile);    
-    currentThread->space = space;
-    space->InitRegisters();		// set the initial register values
-    space->RestoreState();		// load page table register
-    delete programfile;			// close file
-
-    // For the other threads, we create new thread
-    k=0; ++i;
+    // Read the names of the different programs and create a thread for each of
+    // them, then yield the currently executing thread
     while(i<filelength){
-        if(buffer[i]!=' '){
-            name[k]=buffer[i];
-            ++i; ++k;
-        } else {
+        // If no priority is supplied by a thread then we assign a default priority of 100
+        if(buffer[i]=='\n') {
             name[k]='\0';
-            k=0; ++i;
-            while(buffer[i]!='\n') {
-                priority[k]=buffer[i];
-                ++i; ++k;
-            }
-            priority[k]='\0';
             k=0; ++i;
 
             // Creating a new thread and enquing it
-            DEBUG('b', "%s %s\n", name, priority);
-
-            programfile = fileSystem->Open(("%s", name));
+            programfile = fileSystem->Open(name);
             ASSERT(programfile != NULL);
-            thread = new Thread(name);
+            thread = new Thread(name, 100, true);
             thread->space = new AddrSpace(programfile);  // Duplicates the address space
             thread->space->InitRegisters();		// set the initial register values
-            thread->space->RestoreState();		// load page table register
+            thread->SaveUserState();		// load page table register
             thread->StackAllocate(BatchStartFunction, 0);	// Make it ready for a later context switch
             thread->Schedule();
             delete programfile;			// close file
+        } else {
+            // This is the normal case when priority has been suplied
+            if(buffer[i]!=' '){
+                name[k]=buffer[i];
+                ++i; ++k;
+            } else {
+                name[k]='\0';
+                k=0; ++i;
+                while(buffer[i]!='\n') {
+                    priority[k]=buffer[i];
+                    ++i; ++k;
+                }
+                priority[k]='\0';
+                k=0; ++i;
+
+                // Creating a new thread and enquing it
+                programfile = fileSystem->Open(name);
+                ASSERT(programfile != NULL);
+                thread = new Thread(name, atoi(priority), true);
+                thread->space = new AddrSpace(programfile);  // Duplicates the address space
+                thread->space->InitRegisters();		// set the initial register values
+                thread->SaveUserState();		// load page table register
+                thread->StackAllocate(BatchStartFunction, 0);	// Make it ready for a later context switch
+                thread->Schedule();
+                delete programfile;			// close file
+            }
         }
     }
 
-    // Yield the currentThread as soon as we reach here, the scheduler then takes over
-    // the scheduling of the threads
-    currentThread->Yield();
+    // This thread has no more work to do, delete it
+    currentThread->Finish();
 }
 
 // Data structures needed for the console test.  Threads making

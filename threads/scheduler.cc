@@ -53,7 +53,7 @@ Scheduler::~Scheduler()
 void
 Scheduler::ReadyToRun (Thread *thread)
 {
-    DEBUG('t', "Putting thread %s on ready list.\n", thread->getName());
+    DEBUG('t', "Putting thread \"%d\" on ready list.\n", thread->GetPID());
 
     thread->setStatus(READY);
     readyList->Append((void *)thread);
@@ -105,8 +105,8 @@ Scheduler::Run (Thread *nextThread)
     currentThread = nextThread;		    // switch to the next thread
     currentThread->setStatus(RUNNING);      // nextThread is now running
     
-    DEBUG('t', "Switching from thread \"%s\" to thread \"%s\"\n",
-	  oldThread->getName(), nextThread->getName());
+    DEBUG('t', "Switching from thread \"%d\" to thread \"%d\"\n",
+	  oldThread->GetPID(), nextThread->GetPID());
     
     // This is a machine-dependent assembly language routine defined 
     // in switch.s.  You may have to think
@@ -115,7 +115,7 @@ Scheduler::Run (Thread *nextThread)
 
     _SWITCH(oldThread, nextThread);
     
-    DEBUG('t', "Now in thread \"%s\"\n", currentThread->getName());
+    DEBUG('t', "Now in thread \"%d\"\n", currentThread->GetPID());
 
     // If the old thread gave up the processor because it was finishing,
     // we need to delete its carcass.  Note we cannot delete the thread
@@ -156,6 +156,7 @@ Scheduler::Tail ()
     if (currentThread->space != NULL) {         // if there is an address space
         currentThread->RestoreUserState();     // to restore, do it.
         currentThread->space->RestoreState();
+        DEBUG('a', "%d", machine->ReadRegister(StackReg));
     }
 #endif
 }

@@ -23,6 +23,10 @@
 #define STACK_FENCEPOST 0xdeadbeef	// this is put at the top of the
 					// execution stack, for detecting 
 					// stack overflows
+
+// Stativ variable to keep a track of the total number of threads
+int Thread::threadCount = 0;
+
 //----------------------------------------------------------------------
 // Thread::Thread
 // 	Initialize a thread control block, so that we can then call
@@ -39,6 +43,7 @@ Thread::Thread(char* threadName)
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
+    priority = 100;
 #ifdef USER_PROGRAM
     space = NULL;
 #endif
@@ -57,6 +62,53 @@ Thread::Thread(char* threadName)
     waitchild_id = -1;
 
     for (i=0; i<MAX_CHILD_COUNT; i++) exitedChild[i] = false;
+    DEBUG('b', "Creating \"%d\" with name \"%s\" with priority %d\n",pid, threadName, priority);
+
+    // Increment the threadCount
+    threadCount++;
+}
+
+//----------------------------------------------------------------------
+// Thread::Thread
+//	"orphan" sets the ppid to -1 if true
+// same as Thread but sets the priority equal to the given value
+//----------------------------------------------------------------------
+
+Thread::Thread(char* threadName, int newPriority, bool orphan)
+{
+    int i;
+
+    name = threadName;
+    stackTop = NULL;
+    stack = NULL;
+    status = JUST_CREATED;
+    priority = newPriority; //set priority of the thread
+#ifdef USER_PROGRAM
+    space = NULL;
+#endif
+
+    threadArray[thread_index] = this;
+    pid = thread_index;
+    thread_index++;
+    ASSERT(thread_index < MAX_THREAD_COUNT);
+    if(orphan == true) {
+        ppid = -1;
+    } else {
+        if (currentThread != NULL) {
+           ppid = currentThread->GetPID();
+           currentThread->RegisterNewChild (pid);
+        }
+        else ppid = -1;
+    }
+
+    childcount = 0;
+    waitchild_id = -1;
+
+    for (i=0; i<MAX_CHILD_COUNT; i++) exitedChild[i] = false;
+    DEBUG('b', "Creating \"%d\" with name \"%s\" with priority %d\n",pid, threadName, priority);
+
+    // Increment the threadCount
+    threadCount++;
 }
 
 //----------------------------------------------------------------------
@@ -78,6 +130,9 @@ Thread::~Thread()
     ASSERT(this != currentThread);
     if (stack != NULL)
 	DeallocBoundedArray((char *) stack, StackSize * sizeof(int));
+
+    // Decrement the threadCount
+    threadCount--;
 }
 
 //----------------------------------------------------------------------
@@ -162,7 +217,7 @@ Thread::Finish ()
     (void) interrupt->SetLevel(IntOff);		
     ASSERT(this == currentThread);
     
-    DEBUG('t', "Finishing thread \"%s\"\n", getName());
+    DEBUG('t', "Finishing thread \"%d\"\n", GetPID());
     
     threadToBeDestroyed = currentThread;
     Sleep();					// invokes SWITCH
@@ -210,7 +265,7 @@ Thread::Exit (bool terminateSim, int exitcode)
     (void) interrupt->SetLevel(IntOff);
     ASSERT(this == currentThread);
 
-    DEBUG('t', "Finishing thread \"%s\"\n", getName());
+    DEBUG('t', "Finishing thread \"%d\"\n", GetPID());
 
     threadToBeDestroyed = currentThread;
 
@@ -226,6 +281,11 @@ Thread::Exit (bool terminateSim, int exitcode)
        }
     }
 
+    // If there are no threads left to execute then stop the machine
+    if(threadCount == 1) {
+        interrupt->Halt();
+    }
+    
     while ((nextThread = scheduler->FindNextToRun()) == NULL) {
         if (terminateSim) {
            DEBUG('i', "Machine idle.  No interrupts to do.\n");
@@ -301,7 +361,7 @@ Thread::Sleep ()
     ASSERT(this == currentThread);
     ASSERT(interrupt->getLevel() == IntOff);
     
-    DEBUG('t', "Sleeping thread \"%s\"\n", getName());
+    DEBUG('t', "Sleeping thread \"%d\"\n", GetPID());
 
     status = BLOCKED;
     while ((nextThread = scheduler->FindNextToRun()) == NULL) {
@@ -466,7 +526,6 @@ Thread::ResetReturnValue ()
 void
 Thread::Schedule()
 {
-    DEBUG('t', "Scheduling thread %s\n" , this->getName());
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
     scheduler->ReadyToRun(this);        // ReadyToRun assumes that interrupts
                                         // are disabled!

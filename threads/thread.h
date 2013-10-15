@@ -83,7 +83,10 @@ class Thread {
     int machineState[MachineStateSize];  // all registers except for stackTop
 
   public:
+    static int threadCount; // total number of threads
+    int priority; // The priority of the thread
     Thread(char* debugName);		// initialize a Thread 
+    Thread(char* debugName, int newPriority, bool orphan);		// initialize a Thread with priority 
     ~Thread(); 				// deallocate a Thread
 					// NOTE -- thread being deleted
 					// must not be running when delete 
