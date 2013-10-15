@@ -69,12 +69,12 @@ RunBatchProcess(char *filename) {
 
     // Compute the length of the file and then read that much from the file
     int filelength = executable->Length();
-    char buffer[filelength];
+    char readbuffer[filelength];
     OpenFile *programfile;
     Thread *thread;
 
     // Read the executable
-    executable->ReadAt(buffer, (filelength-1), 0);
+    executable->ReadAt(readbuffer, (filelength-1), 0);
     DEBUG('b', "running batch jobs from \"%s\"\n", filename);
    
     // Create threads and enque them
@@ -82,11 +82,20 @@ RunBatchProcess(char *filename) {
     char name[100];
     char priority[10];
 
+    // First of all read the type of scheduling algorithm
+    while(readbuffer[i]!='\n') {
+        name[k]=readbuffer[i];
+        ++i; ++k;
+    }
+    name[k]='\0';
+    k=0; ++i;
+    DEBUG('b', "The scheduling algorithm is \"%s\"\n", name);
+
     // Read the names of the different programs and create a thread for each of
     // them, then yield the currently executing thread
     while(i<filelength){
         // If no priority is supplied by a thread then we assign a default priority of 100
-        if(buffer[i]=='\n') {
+        if(readbuffer[i]=='\n') {
             name[k]='\0';
             k=0; ++i;
 
@@ -102,14 +111,14 @@ RunBatchProcess(char *filename) {
             delete programfile;			// close file
         } else {
             // This is the normal case when priority has been suplied
-            if(buffer[i]!=' '){
-                name[k]=buffer[i];
+            if(readbuffer[i]!=' '){
+                name[k]=readbuffer[i];
                 ++i; ++k;
             } else {
                 name[k]='\0';
                 k=0; ++i;
-                while(buffer[i]!='\n') {
-                    priority[k]=buffer[i];
+                while(readbuffer[i]!='\n') {
+                    priority[k]=readbuffer[i];
                     ++i; ++k;
                 }
                 priority[k]='\0';
