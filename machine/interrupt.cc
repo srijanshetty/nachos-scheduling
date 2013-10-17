@@ -64,6 +64,7 @@ Interrupt::Interrupt()
     inHandler = FALSE;
     yieldOnReturn = FALSE;
     status = SystemMode;
+    tickCount = 0;
 }
 
 //----------------------------------------------------------------------
@@ -161,6 +162,16 @@ Interrupt::OneTick()
 	stats->userTicks += UserTick;
     }
     DEBUG('i', "\n== Tick %d ==\n", stats->totalTicks);
+
+    // Increment the time count, if quantum has elapsed
+    // then prempt
+    //if(tickCount == scheduler->quantum - 1) {
+      //  tickCount = 0;
+
+       // Thread *nextThread = scheduler->FindNextToRun(); 
+        //scheduler->Run(nextThread);
+    //}
+    //tickCount = (tickCount + 1);
 
 // check any pending interrupts are now ready to fire
     ChangeLevel(IntOn, IntOff);		// first, turn off interrupts

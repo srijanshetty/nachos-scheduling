@@ -69,6 +69,11 @@ extern void Cleanup();
 static void
 TimerInterruptHandler(int dummy)
 {
+    // Return for non-preemptive scheduling
+    if(scheduler->scheduler_type == 1 || scheduler->scheduler_type == 2) {
+        return;
+    }
+
     TimeSortedWaitQueue *ptr;
     if (interrupt->getStatus() != IdleMode) {
         // Check the head of the sleep queue
@@ -160,7 +165,7 @@ Initialize(int argc, char **argv)
     stats = new Statistics();			// collect statistics
     interrupt = new Interrupt;			// start up interrupt handling
     scheduler = new Scheduler();		// initialize the ready queue
-    if (randomYield)				// start the timer (if needed)
+    // if (randomYield)				// start the timer (if needed)
        timer = new Timer(TimerInterruptHandler, 0, randomYield);
 
     threadToBeDestroyed = NULL;

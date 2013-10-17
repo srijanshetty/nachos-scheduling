@@ -33,6 +33,9 @@ Scheduler::Scheduler()
 
     // SHORTEST JOB FIRST
     alpha = 0.5;
+
+    // QUANTUM BASED SCHEDULING
+    quantum = 0;
 } 
 
 //----------------------------------------------------------------------

@@ -106,6 +106,19 @@ RunBatchProcess(char *filename) {
     name[k]='\0';
     k=0; ++i;
     scheduler->scheduler_type = atoi(name);
+
+    // Operations according to the type of algorithm
+    switch(scheduler->scheduler_type) {
+        case 3: scheduler->quantum = 2704;
+                break;
+        case 4: scheduler->quantum = 1352;
+                break;
+        case 5: scheduler->quantum = 676;
+                break;
+        default: 
+                break;
+    }
+
     DEBUG('s', "Scheduling algorithm is \"%d\"\n", scheduler->scheduler_type);
 
     // Read the names of the different programs and create a thread for each of

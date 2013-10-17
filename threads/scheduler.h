@@ -35,6 +35,9 @@ class Scheduler {
     // SHORTEST JOB FIRST
     double alpha;
    
+    // QUANTUM BASED SCHEDULING
+    int quantum;
+
   private:
     List *readyList;  		// queue of threads that are ready to run,
 				// but not running
