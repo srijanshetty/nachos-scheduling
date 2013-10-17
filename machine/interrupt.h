@@ -112,7 +112,6 @@ class Interrupt {
     
     void OneTick();       		// Advance simulated time
 
-    int tickCount; // keeps a count of the number of ticks
   private:
     IntStatus level;		// are interrupts enabled or disabled?
     List *pending;		// the list of interrupts scheduled
