@@ -311,8 +311,7 @@ Thread::Exit (bool terminateSim, int exitcode)
            DEBUG('s' , "\nThread \"%d\" total %d, cpu %d, wait %d\n", 
                    currentThread->GetPID(),
                    (currentThread->end_time - currentThread->start_time), 
-                   currentThread->cpu_time,
-                   (currentThread->end_time - currentThread->start_time - currentThread->cpu_time));
+                   currentThread->cpu_time, currentThread->wait_time);
 
             DEBUG('i', "Machine idle.  No interrupts to do.\n");
             printf("\nNo threads ready or runnable, and no pending interrupts.\n");
@@ -327,8 +326,7 @@ Thread::Exit (bool terminateSim, int exitcode)
    DEBUG('s' , "\nThread \"%d\" total %d, cpu %d, wait %d\n", 
            currentThread->GetPID(),
            (currentThread->end_time - currentThread->start_time), 
-           currentThread->cpu_time,
-           (currentThread->end_time - currentThread->start_time - currentThread->cpu_time));
+           currentThread->cpu_time, currentThread->wait_time);
 
     scheduler->Run(nextThread); // returns when we've been signalled
 }

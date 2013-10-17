@@ -66,6 +66,7 @@ Scheduler::ReadyToRun (Thread *thread)
 
     // Start the wait time of the thread
     thread->setStatus(READY);
+
     thread->wait_time_start = stats->totalTicks;
     readyList->Append((void *)thread);
 }
@@ -115,6 +116,10 @@ Scheduler::Run (Thread *nextThread)
 
     currentThread = nextThread;		    // switch to the next thread
     currentThread->setStatus(RUNNING);      // nextThread is now running
+  
+    // This is where the cpu_burst_start of the thread starts
+    nextThread->cpu_burst_start = stats->totalTicks;
+    nextThread->wait_time += stats->totalTicks - nextThread->wait_time_start;
     
     DEBUG('t', "Switching from thread \"%d\" to thread \"%d\"\n",
 	  oldThread->GetPID(), nextThread->GetPID());
@@ -123,13 +128,8 @@ Scheduler::Run (Thread *nextThread)
     // in switch.s.  You may have to think
     // a bit to figure out what happens after this, both from the point
     // of view of the thread and from the perspective of the "outside world".
-
     
     _SWITCH(oldThread, nextThread);
-    
-    // Now increment the statics of the new thread
-    nextThread->wait_time = stats->totalTicks - nextThread->wait_time_start;
-    nextThread->cpu_burst_start = stats->totalTicks;
 
     DEBUG('t', "Now in thread \"%d\"\n", currentThread->GetPID());
 
