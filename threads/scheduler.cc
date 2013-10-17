@@ -64,7 +64,9 @@ Scheduler::ReadyToRun (Thread *thread)
 {
     DEBUG('t', "Putting thread \"%d\" on ready list.\n", thread->GetPID());
 
+    // Start the wait time of the thread
     thread->setStatus(READY);
+    thread->wait_time_start = stats->totalTicks;
     readyList->Append((void *)thread);
 }
 
@@ -111,20 +113,9 @@ Scheduler::Run (Thread *nextThread)
     oldThread->CheckOverflow();		    // check if the old thread
 					    // had an undetected stack overflow
 
-    // Update the information about the oldThread, with is the oldThread right now
-    oldThread->cpu_burst_previous = stats->totalTicks - oldThread->cpu_burst_start;
-    oldThread->cpu_time += oldThread->cpu_burst_previous;
-
-    DEBUG('s', "\n[ pid %d ] start time %d, current time %d, CPU burst time %d\n", 
-            oldThread->GetPID(), oldThread->cpu_burst_start, 
-            stats->totalTicks, oldThread->cpu_burst_previous);
-
     currentThread = nextThread;		    // switch to the next thread
     currentThread->setStatus(RUNNING);      // nextThread is now running
     
-    // Now increment the statics of the new thread
-    nextThread->cpu_burst_start = stats->totalTicks;
-
     DEBUG('t', "Switching from thread \"%d\" to thread \"%d\"\n",
 	  oldThread->GetPID(), nextThread->GetPID());
     
@@ -136,6 +127,10 @@ Scheduler::Run (Thread *nextThread)
     
     _SWITCH(oldThread, nextThread);
     
+    // Now increment the statics of the new thread
+    nextThread->wait_time = stats->totalTicks - nextThread->wait_time_start;
+    nextThread->cpu_burst_start = stats->totalTicks;
+
     DEBUG('t', "Now in thread \"%d\"\n", currentThread->GetPID());
 
     // If the old thread gave up the processor because it was finishing,

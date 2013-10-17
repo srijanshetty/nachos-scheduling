@@ -54,6 +54,8 @@ Thread::Thread(char* threadName)
     end_time = 0;
     cpu_time = 0;
     cpu_burst_previous = 0; 
+    wait_time = 0;
+    wait_time_start = 0;
 
     threadArray[thread_index] = this;
     pid = thread_index;
@@ -100,6 +102,8 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
     end_time = 0;
     cpu_time = 0;
     cpu_burst_previous = 0; 
+    wait_time = 0;
+    wait_time_start = 0;
 
     threadArray[thread_index] = this;
     pid = thread_index;
@@ -393,6 +397,14 @@ Thread::Sleep ()
     ASSERT(interrupt->getLevel() == IntOff);
     
     DEBUG('t', "Sleeping thread \"%d\"\n", GetPID());
+
+    // Update the information about the currentThread, with is the currentThread right now
+    currentThread->cpu_burst_previous = stats->totalTicks - currentThread->cpu_burst_start;
+    currentThread->cpu_time += currentThread->cpu_burst_previous;
+
+    DEBUG('s', "\n[ pid %d ] start time %d, current time %d, CPU burst time %d\n", 
+            currentThread->GetPID(), currentThread->cpu_burst_start, 
+            stats->totalTicks, currentThread->cpu_burst_previous);
 
     status = BLOCKED;
     while ((nextThread = scheduler->FindNextToRun()) == NULL) {

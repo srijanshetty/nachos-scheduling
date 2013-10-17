@@ -92,6 +92,8 @@ class Thread {
     int cpu_time; // Stores the amount of cpu time of the process
     int cpu_burst_start; // When the cpu burst starts   
     int cpu_burst_previous; // This is the previous CPU burst time
+    int wait_time_start; // waiting time for the threads
+    int wait_time; // to store the total wait time of the thread
 
     static int threadCount; // total number of threads
 

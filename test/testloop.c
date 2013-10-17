@@ -1,17 +1,18 @@
 #include "syscall.h"
-#define OUTER_BOUND 10
+#define OUTER_BOUND 4
 #define SIZE 100
 
 int
 main()
 {
-    int array[SIZE], i, k, sum;
+    int array[SIZE], i, k, sum, pid=GetPID()-1;
     unsigned start_time, end_time;
     
     start_time = GetTime();
     for (k=0; k<OUTER_BOUND; k++) {
        for (i=0; i<SIZE; i++) sum += array[i];
-       PrintInt(k);
+       PrintInt(pid);
+       PrintInt(pid);
     }
     end_time = GetTime();
     PrintChar('\n');
