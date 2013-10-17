@@ -59,8 +59,11 @@ extern void StartProcess (char*);
 void
 ForkStartFunction (int dummy)
 {
-   currentThread->Startup();
-   machine->Run();
+    // This is when this thread gets started for the first time
+    currentThread->start_time = stats->totalTicks;
+
+    currentThread->Startup();
+    machine->Run();
 }
 
 static void ConvertIntToHex (unsigned v, Console *console)
@@ -106,6 +109,15 @@ ExceptionHandler(ExceptionType which)
     else if ((which == SyscallException) && (type == SC_Exit)) {
        exitcode = machine->ReadRegister(4);
        printf("[pid %d]: Exit called. Code: %d\n", currentThread->GetPID(), exitcode);
+
+       // Printing the statics of this thread
+       currentThread->end_time = stats->totalTicks;
+       DEBUG('s' , "\nThread \"%d\" total %d, cpu %d, wait %d\n", 
+               currentThread->GetPID(),
+               (currentThread->end_time - currentThread->start_time), 
+               currentThread->cpu_time,
+               (currentThread->end_time - currentThread->start_time -currentThread->cpu_time));
+
        // We do not wait for the children to finish.
        // The children will continue to run.
        // We will worry about this when and if we implement signals.

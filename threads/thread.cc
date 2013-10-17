@@ -48,6 +48,12 @@ Thread::Thread(char* threadName)
     space = NULL;
 #endif
 
+    // The three variables defined below are to compute the CPU 
+    // utilization and other parameters of the process
+    start_time = 0;
+    end_time = 0;
+    cpu_time = 0;
+
     threadArray[thread_index] = this;
     pid = thread_index;
     thread_index++;
@@ -87,6 +93,12 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
     space = NULL;
 #endif
 
+    // The three variables defined below are to compute the CPU 
+    // utilization and other parameters of the process
+    start_time = 0;
+    end_time = 0;
+    cpu_time = 0;
+
     threadArray[thread_index] = this;
     pid = thread_index;
     thread_index++;
@@ -125,7 +137,7 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
 
 Thread::~Thread()
 {
-    DEBUG('t', "Deleting thread \"%s\"\n", name);
+    DEBUG('t', "Deleting thread \"%d\"\n", pid);
 
     ASSERT(this != currentThread);
     if (stack != NULL)
@@ -283,18 +295,19 @@ Thread::Exit (bool terminateSim, int exitcode)
 
     // If there are no threads left to execute then stop the machine
     if(threadCount == 1) {
-        interrupt->Halt();
+        terminateSim = true;
     }
     
     while ((nextThread = scheduler->FindNextToRun()) == NULL) {
         if (terminateSim) {
-           DEBUG('i', "Machine idle.  No interrupts to do.\n");
-           printf("\nNo threads ready or runnable, and no pending interrupts.\n");
-           printf("Assuming all programs completed.\n");
-           interrupt->Halt();
+            DEBUG('i', "Machine idle.  No interrupts to do.\n");
+            printf("\nNo threads ready or runnable, and no pending interrupts.\n");
+            printf("Assuming all programs completed.\n");
+            interrupt->Halt();
         }
         else interrupt->Idle();      // no one to run, wait for an interrupt
     }
+
     scheduler->Run(nextThread); // returns when we've been signalled
 }
 
@@ -324,7 +337,7 @@ Thread::Yield ()
     
     ASSERT(this == currentThread);
     
-    DEBUG('t', "Yielding thread \"%s\"\n", getName());
+    DEBUG('t', "Yielding thread \"%d\"\n", pid);
     
     nextThread = scheduler->FindNextToRun();
     if (nextThread != NULL) {

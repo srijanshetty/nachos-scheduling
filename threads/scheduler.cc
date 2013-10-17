@@ -30,6 +30,10 @@
 Scheduler::Scheduler()
 { 
     readyList = new List; 
+
+    // SHORTEST JOB FIRST
+    alpha = 0.5;
+    burst_estimate = new int[MAX_THREADS];
 } 
 
 //----------------------------------------------------------------------

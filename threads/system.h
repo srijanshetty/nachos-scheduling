@@ -36,7 +36,6 @@ extern Thread *threadArray[];  // Array of thread pointers
 extern unsigned thread_index;                  // Index into this array (also used to assign unique pid)
 extern bool initializedConsoleSemaphores;	// Used to initialize the semaphores for console I/O exactly once
 extern bool exitThreadArray[];		// Marks exited threads
-
 class TimeSortedWaitQueue {		// Needed to implement SC_Sleep
 private:
    Thread *t;				// Thread pointer of the sleeping thread

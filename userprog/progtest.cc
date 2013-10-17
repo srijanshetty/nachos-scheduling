@@ -14,12 +14,20 @@
 #include "addrspace.h"
 #include "synch.h"
 
+//----------------------------------------------------------------------
+// RunBatchProcess 
+// The function run when a batch thread gets scheduled for the very first time
+//----------------------------------------------------------------------
 void
 BatchStartFunction(int dummy)
 {
-   currentThread->Startup();
-   DEBUG('b', "Running thread \"%d\" for the first time\n", currentThread->GetPID());
-   machine->Run();
+    // This is when this thread gets started for the first time
+    currentThread->start_time = stats->totalTicks;
+
+    currentThread->Startup();
+    DEBUG('b', "Running thread \"%d\" for the first time\n", currentThread->GetPID());
+    // Call the start_time function over her
+    machine->Run();
 }
 
 //----------------------------------------------------------------------
@@ -45,6 +53,13 @@ StartProcess(char *filename)
 
     space->InitRegisters();		// set the initial register values
     space->RestoreState();		// load page table register
+
+    // This is when this thread gets started for the first time
+    currentThread->start_time = stats->totalTicks;
+
+    // Set the scheduling type
+    scheduler->scheduler_type = 1;
+    DEBUG('b', "Scheduling algorithm is \"%d\"\n", scheduler->scheduler_type);
 
     machine->Run();			// jump to the user progam
     ASSERT(FALSE);			// machine->Run never returns;
@@ -89,7 +104,8 @@ RunBatchProcess(char *filename) {
     }
     name[k]='\0';
     k=0; ++i;
-    DEBUG('b', "The scheduling algorithm is \"%s\"\n", name);
+    scheduler->scheduler_type = atoi(name);
+    DEBUG('b', "Scheduling algorithm is \"%d\"\n", scheduler->scheduler_type);
 
     // Read the names of the different programs and create a thread for each of
     // them, then yield the currently executing thread
@@ -139,7 +155,7 @@ RunBatchProcess(char *filename) {
     }
 
     // This thread has no more work to do, delete it
-    currentThread->Finish();
+    currentThread->Exit(false, 0);
 }
 
 // Data structures needed for the console test.  Threads making
@@ -163,7 +179,7 @@ static void WriteDone(int arg) { writeDone->V(); }
 //	the output.  Stop when the user types a 'q'.
 //----------------------------------------------------------------------
 
-    void 
+void 
 ConsoleTest (char *in, char *out)
 {
     char ch;

@@ -29,6 +29,12 @@ class Scheduler {
     void Print();			// Print contents of ready list
 
     void Tail();			// Used by fork()
+
+    int scheduler_type; // The type of scheduling algorithm used
+
+    // SHORTEST JOB FIRST
+    int alpha;
+    int *burst_estimate; // an estimate of cpu_burst for all jobs 
    
   private:
     List *readyList;  		// queue of threads that are ready to run,

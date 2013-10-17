@@ -35,13 +35,20 @@ Machine::Run()
     if(DebugIsEnabled('m'))
         printf("Starting thread \"%s\" at time %d\n",
 	       currentThread->getName(), stats->totalTicks);
+
     interrupt->setStatus(UserMode);
+
+    // This is when the first instruction gets executed, i.e,
+    // the first cpu_burst starts here
+    currentThread->cpu_burst_start = stats->totalTicks;
+
     for (;;) {
         OneInstruction(instr);
 	interrupt->OneTick();
 	if (singleStep && (runUntilTime <= stats->totalTicks))
 	  Debugger();
     }
+
 }
 
 

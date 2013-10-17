@@ -38,6 +38,7 @@
 #define THREAD_H
 
 #define MAX_CHILD_COUNT 100
+#define MAX_THREADS 200
 
 #include "copyright.h"
 #include "utility.h"
@@ -83,7 +84,17 @@ class Thread {
     int machineState[MachineStateSize];  // all registers except for stackTop
 
   public:
+
+    // The following variables will be used to computer the cpu utilization of 
+    // the process
+    int start_time; // To store the time when the program started executing
+    int end_time; // To store the time when the process stopped executing
+    int cpu_time; // Stores the amount of cpu time of the process
+    int cpu_burst_start; // When the cpu burst starts   
+    int cpu_burst_previous; // This is the previous CPU burst time
+
     static int threadCount; // total number of threads
+
     int priority; // The priority of the thread
     Thread(char* debugName);		// initialize a Thread 
     Thread(char* debugName, int newPriority, bool orphan);		// initialize a Thread with priority 
