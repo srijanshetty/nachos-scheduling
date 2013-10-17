@@ -38,10 +38,6 @@ Machine::Run()
 
     interrupt->setStatus(UserMode);
 
-    // This is when the first instruction gets executed, i.e,
-    // the first cpu_burst starts here
-    currentThread->cpu_burst_start = stats->totalTicks;
-
     for (;;) {
         OneInstruction(instr);
 	interrupt->OneTick();

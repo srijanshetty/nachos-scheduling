@@ -32,8 +32,13 @@ Scheduler::Scheduler()
     readyList = new List; 
 
     // SHORTEST JOB FIRST
+    int i;
     alpha = 0.5;
     burst_estimate = new int[MAX_THREADS];
+    // set the initial estimate for all threads to be zero
+    for(i=0;i<MAX_THREADS;++i){
+        burst_estimate[i]=0;
+    }
 } 
 
 //----------------------------------------------------------------------
@@ -106,9 +111,20 @@ Scheduler::Run (Thread *nextThread)
     oldThread->CheckOverflow();		    // check if the old thread
 					    // had an undetected stack overflow
 
+    // Update the information about the oldThread, with is the oldThread right now
+    oldThread->cpu_burst_previous = stats->totalTicks - oldThread->cpu_burst_start;
+    oldThread->cpu_time += oldThread->cpu_burst_previous;
+
+    DEBUG('s', "\n[ pid %d ] start time %d, current time %d, CPU burst time %d\n", 
+            oldThread->GetPID(), oldThread->cpu_burst_start, 
+            stats->totalTicks, oldThread->cpu_burst_previous);
+
     currentThread = nextThread;		    // switch to the next thread
     currentThread->setStatus(RUNNING);      // nextThread is now running
     
+    // Now increment the statics of the new thread
+    nextThread->cpu_burst_start = stats->totalTicks;
+
     DEBUG('t', "Switching from thread \"%d\" to thread \"%d\"\n",
 	  oldThread->GetPID(), nextThread->GetPID());
     
@@ -117,6 +133,7 @@ Scheduler::Run (Thread *nextThread)
     // a bit to figure out what happens after this, both from the point
     // of view of the thread and from the perspective of the "outside world".
 
+    
     _SWITCH(oldThread, nextThread);
     
     DEBUG('t', "Now in thread \"%d\"\n", currentThread->GetPID());

@@ -23,9 +23,10 @@ BatchStartFunction(int dummy)
 {
     // This is when this thread gets started for the first time
     currentThread->start_time = stats->totalTicks;
+    currentThread->cpu_burst_start = currentThread->start_time;
 
     currentThread->Startup();
-    DEBUG('b', "Running thread \"%d\" for the first time\n", currentThread->GetPID());
+    DEBUG('t', "Running thread \"%d\" for the first time\n", currentThread->GetPID());
     // Call the start_time function over her
     machine->Run();
 }
@@ -59,7 +60,7 @@ StartProcess(char *filename)
 
     // Set the scheduling type
     scheduler->scheduler_type = 1;
-    DEBUG('b', "Scheduling algorithm is \"%d\"\n", scheduler->scheduler_type);
+    DEBUG('s', "Scheduling algorithm is \"%d\"\n", scheduler->scheduler_type);
 
     machine->Run();			// jump to the user progam
     ASSERT(FALSE);			// machine->Run never returns;
@@ -90,7 +91,7 @@ RunBatchProcess(char *filename) {
 
     // Read the executable
     executable->ReadAt(readbuffer, (filelength-1), 0);
-    DEBUG('b', "running batch jobs from \"%s\"\n", filename);
+    DEBUG('s', "running batch jobs from \"%s\"\n", filename);
    
     // Create threads and enque them
     int i=0, k=0;
@@ -105,7 +106,7 @@ RunBatchProcess(char *filename) {
     name[k]='\0';
     k=0; ++i;
     scheduler->scheduler_type = atoi(name);
-    DEBUG('b', "Scheduling algorithm is \"%d\"\n", scheduler->scheduler_type);
+    DEBUG('s', "Scheduling algorithm is \"%d\"\n", scheduler->scheduler_type);
 
     // Read the names of the different programs and create a thread for each of
     // them, then yield the currently executing thread
@@ -154,7 +155,9 @@ RunBatchProcess(char *filename) {
         }
     }
 
-    // This thread has no more work to do, delete it
+    // The main thread exits after this
+    currentThread->cpu_burst_previous = stats->totalTicks - currentThread->cpu_burst_start;
+    currentThread->cpu_time += currentThread->cpu_burst_previous;
     currentThread->Exit(false, 0);
 }
 

@@ -103,22 +103,13 @@ Machine::RaiseException(ExceptionType which, int badVAddr)
 {
     DEBUG('m', "Exception: %s\n", exceptionNames[which]);
 
-    // Increment the CPU time of the thread and compute the cpu_burst_previous
-    currentThread->cpu_burst_previous = stats->totalTicks - currentThread->cpu_burst_start;
-    DEBUG('s', "\n[ pid %d ] start time %d, current time %d, CPU burst time %d\n", 
-            currentThread->GetPID(), currentThread->cpu_burst_start, 
-            stats->totalTicks, currentThread->cpu_burst_previous);
-    currentThread->cpu_time += stats->totalTicks - currentThread->cpu_burst_start;
-    
 //  ASSERT(interrupt->getStatus() == UserMode);
     registers[BadVAddrReg] = badVAddr;
     DelayedLoad(0, 0);			// finish anything in progress
+
     interrupt->setStatus(SystemMode);
     ExceptionHandler(which);		// interrupts are enabled at this point
     interrupt->setStatus(UserMode);
-
-    // Now set the cpu_burst_start for the currentThread
-    currentThread->cpu_burst_start = stats->totalTicks;
 }
 
 //----------------------------------------------------------------------

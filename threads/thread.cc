@@ -53,6 +53,7 @@ Thread::Thread(char* threadName)
     start_time = 0;
     end_time = 0;
     cpu_time = 0;
+    cpu_burst_previous = 0; 
 
     threadArray[thread_index] = this;
     pid = thread_index;
@@ -98,6 +99,7 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
     start_time = 0;
     end_time = 0;
     cpu_time = 0;
+    cpu_burst_previous = 0; 
 
     threadArray[thread_index] = this;
     pid = thread_index;
@@ -300,6 +302,14 @@ Thread::Exit (bool terminateSim, int exitcode)
     
     while ((nextThread = scheduler->FindNextToRun()) == NULL) {
         if (terminateSim) {
+           // Printing the statistics of this thread as this is about to exit
+           currentThread->end_time = stats->totalTicks;
+           DEBUG('s' , "\nThread \"%d\" total %d, cpu %d, wait %d\n", 
+                   currentThread->GetPID(),
+                   (currentThread->end_time - currentThread->start_time), 
+                   currentThread->cpu_time,
+                   (currentThread->end_time - currentThread->start_time - currentThread->cpu_time));
+
             DEBUG('i', "Machine idle.  No interrupts to do.\n");
             printf("\nNo threads ready or runnable, and no pending interrupts.\n");
             printf("Assuming all programs completed.\n");
@@ -307,6 +317,14 @@ Thread::Exit (bool terminateSim, int exitcode)
         }
         else interrupt->Idle();      // no one to run, wait for an interrupt
     }
+
+   // Printing the statistics of this thread as this is about to exit
+   currentThread->end_time = stats->totalTicks;
+   DEBUG('s' , "\nThread \"%d\" total %d, cpu %d, wait %d\n", 
+           currentThread->GetPID(),
+           (currentThread->end_time - currentThread->start_time), 
+           currentThread->cpu_time,
+           (currentThread->end_time - currentThread->start_time - currentThread->cpu_time));
 
     scheduler->Run(nextThread); // returns when we've been signalled
 }
