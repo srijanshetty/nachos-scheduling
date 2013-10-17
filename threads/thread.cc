@@ -53,7 +53,9 @@ Thread::Thread(char* threadName)
     start_time = 0;
     end_time = 0;
     cpu_time = 0;
-    cpu_burst_previous = 0; 
+    cpu_burst_start = 0;
+    cpu_burst_previous = 0.0; 
+    cpu_burst_estimate = 200.0;
     wait_time = 0;
     wait_time_start = 0;
 
@@ -101,7 +103,9 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
     start_time = 0;
     end_time = 0;
     cpu_time = 0;
-    cpu_burst_previous = 0; 
+    cpu_burst_start = 0;
+    cpu_burst_previous = 0.0; 
+    cpu_burst_estimate = 200.0;
     wait_time = 0;
     wait_time_start = 0;
 

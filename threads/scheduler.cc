@@ -32,13 +32,7 @@ Scheduler::Scheduler()
     readyList = new List; 
 
     // SHORTEST JOB FIRST
-    int i;
     alpha = 0.5;
-    burst_estimate = new int[MAX_THREADS];
-    // set the initial estimate for all threads to be zero
-    for(i=0;i<MAX_THREADS;++i){
-        burst_estimate[i]=0;
-    }
 } 
 
 //----------------------------------------------------------------------
@@ -68,7 +62,25 @@ Scheduler::ReadyToRun (Thread *thread)
     thread->setStatus(READY);
 
     thread->wait_time_start = stats->totalTicks;
-    readyList->Append((void *)thread);
+
+    // For SJF
+    if(scheduler_type == 2) {
+        //Compute the burst of the thread and then sorted insert
+        double estimate = alpha*thread->cpu_burst_previous 
+                        + ( 1- alpha )*thread->cpu_burst_estimate;
+
+        DEBUG('s', "\n[ pid %d ] E(n) %f E(n-1) %f burst %d\n", 
+                currentThread->GetPID(), estimate,
+                currentThread->cpu_burst_estimate,
+                currentThread->cpu_burst_previous);
+
+        thread->cpu_burst_estimate = estimate;
+
+        // Add to the readyList
+        readyList->SortedInsert((void *)thread, estimate);
+    } else {
+        readyList->Append((void *)thread);
+    }
 }
 
 //----------------------------------------------------------------------
@@ -82,7 +94,13 @@ Scheduler::ReadyToRun (Thread *thread)
 Thread *
 Scheduler::FindNextToRun ()
 {
-    return (Thread *)readyList->Remove();
+    // SJF Scheduling
+    if(scheduler_type == 2) {
+        int key;
+        return (Thread *)readyList->SortedRemove(&key); 
+    }
+    else
+        return (Thread *)readyList->Remove();
 }
 
 //----------------------------------------------------------------------

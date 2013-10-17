@@ -33,8 +33,7 @@ class Scheduler {
     int scheduler_type; // The type of scheduling algorithm used
 
     // SHORTEST JOB FIRST
-    int alpha;
-    int *burst_estimate; // an estimate of cpu_burst for all jobs 
+    double alpha;
    
   private:
     List *readyList;  		// queue of threads that are ready to run,
