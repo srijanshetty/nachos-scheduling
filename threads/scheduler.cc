@@ -81,6 +81,10 @@ Scheduler::ReadyToRun (Thread *thread)
 
         // Add to the readyList
         readyList->SortedInsert((void *)thread, estimate);
+    } else if ( scheduler_type >= 7 && scheduler_type <=10 ) {
+        // For UNIX scheduling
+        // Compute the priority and add it to the readyList
+        readyList->Append((void *)thread);
     } else {
         readyList->Append((void *)thread);
     }

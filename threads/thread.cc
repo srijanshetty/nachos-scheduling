@@ -43,7 +43,7 @@ Thread::Thread(char* threadName)
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
-    priority = 100;
+    base_priority = 50;
 #ifdef USER_PROGRAM
     space = NULL;
 #endif
@@ -58,7 +58,6 @@ Thread::Thread(char* threadName)
     cpu_burst_estimate = 200.0;
     wait_time = 0;
     wait_time_start = 0;
-    tickCount = 0; 
 
     threadArray[thread_index] = this;
     pid = thread_index;
@@ -74,7 +73,7 @@ Thread::Thread(char* threadName)
     waitchild_id = -1;
 
     for (i=0; i<MAX_CHILD_COUNT; i++) exitedChild[i] = false;
-    DEBUG('b', "Creating \"%d\" with name \"%s\" with priority %d\n",pid, threadName, priority);
+    DEBUG('b', "Creating \"%d\" with name \"%s\" with priority %d\n",pid, threadName, base_priority);
 
     // Increment the threadCount
     threadCount++;
@@ -94,7 +93,7 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
-    priority = newPriority; //set priority of the thread
+    base_priority = 50 + newPriority; //set priority of the thread
 #ifdef USER_PROGRAM
     space = NULL;
 #endif
@@ -109,7 +108,6 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
     cpu_burst_estimate = 200.0;
     wait_time = 0;
     wait_time_start = 0;
-    tickCount = 0; 
 
     threadArray[thread_index] = this;
     pid = thread_index;
