@@ -72,8 +72,21 @@ TimerInterruptHandler(int dummy)
     // Return for non-preemptive scheduling
     if(scheduler->scheduler_type == 1 || scheduler->scheduler_type == 2) {
         return;
+    } 
+
+    // Check if the quantum has expired or not
+    currentThread->tickCount++;
+    DEBUG('s', "\n[ pid %d ] TickCount %d\n", currentThread->GetPID(), currentThread->tickCount);
+    if(currentThread->tickCount == scheduler->quantum/100) {
+        currentThread->tickCount = 0;
+
+        // Yield this thread now
+        interrupt->YieldOnReturn();
+        return;
     }
 
+    return;
+    
     TimeSortedWaitQueue *ptr;
     if (interrupt->getStatus() != IdleMode) {
         // Check the head of the sleep queue

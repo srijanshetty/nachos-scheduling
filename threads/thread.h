@@ -98,6 +98,8 @@ class Thread {
 
     static int threadCount; // total number of threads
 
+    int tickCount; // Stores the ticks when the process is running
+
     int priority; // The priority of the thread
     Thread(char* debugName);		// initialize a Thread 
     Thread(char* debugName, int newPriority, bool orphan);		// initialize a Thread with priority 

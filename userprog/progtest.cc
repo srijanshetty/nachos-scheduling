@@ -109,11 +109,11 @@ RunBatchProcess(char *filename) {
 
     // Operations according to the type of algorithm
     switch(scheduler->scheduler_type) {
-        case 3: scheduler->quantum = 2704;
+        case 3: scheduler->quantum = 2800;
                 break;
-        case 4: scheduler->quantum = 1352;
+        case 4: scheduler->quantum = 1400;
                 break;
-        case 5: scheduler->quantum = 676;
+        case 5: scheduler->quantum = 700;
                 break;
         default: 
                 break;
