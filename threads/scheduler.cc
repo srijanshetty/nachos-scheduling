@@ -145,6 +145,9 @@ Scheduler::Run (Thread *nextThread)
     // This is where the cpu_burst_start of the thread starts
     nextThread->cpu_burst_start = stats->totalTicks;
     nextThread->wait_time += stats->totalTicks - nextThread->wait_time_start;
+
+    // Reset the quantum of the oldThread
+    oldThread->tickCount = 0;
     
     DEBUG('t', "Switching from thread \"%d\" to thread \"%d\"\n",
 	  oldThread->GetPID(), nextThread->GetPID());

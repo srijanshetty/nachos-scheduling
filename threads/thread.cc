@@ -58,6 +58,7 @@ Thread::Thread(char* threadName)
     cpu_burst_estimate = 200.0;
     wait_time = 0;
     wait_time_start = 0;
+    tickCount = 0;
 
     threadArray[thread_index] = this;
     pid = thread_index;
@@ -108,6 +109,7 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
     cpu_burst_estimate = 200.0;
     wait_time = 0;
     wait_time_start = 0;
+    tickCount = 0;
 
     threadArray[thread_index] = this;
     pid = thread_index;
@@ -127,7 +129,7 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
     waitchild_id = -1;
 
     for (i=0; i<MAX_CHILD_COUNT; i++) exitedChild[i] = false;
-    DEBUG('b', "Creating \"%d\" with name \"%s\" with priority %d\n",pid, threadName, priority);
+    DEBUG('b', "Creating \"%d\" with name \"%s\" with priority %d\n",pid, threadName, base_priority);
 
     // Increment the threadCount
     threadCount++;

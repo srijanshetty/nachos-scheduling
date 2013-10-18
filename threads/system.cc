@@ -18,8 +18,6 @@ Interrupt *interrupt;			// interrupt status
 Statistics *stats;			// performance metrics
 Timer *timer;				// the hardware timer device,
 					// for invoking context switches
-int tickCount; // To store the number of ticks in case of 
-                // quantum based scheduling
 
 unsigned numPagesAllocated;              // number of physical frames allocated
 
@@ -91,10 +89,10 @@ TimerInterruptHandler(int dummy)
     } 
 
     // QUANTUM BASED SCHEDULING
-    tickCount++;
-    DEBUG('s', "\n[ pid %d ] TickCount %d\n", currentThread->GetPID(), tickCount);
-    if(tickCount == scheduler->quantum/100) {
-        tickCount = 0;
+    currentThread->tickCount++;
+    DEBUG('s', "\n[ pid %d ] TickCount %d\n", currentThread->GetPID(), currentThread->tickCount);
+    if(currentThread->tickCount == scheduler->quantum/100) {
+        currentThread->tickCount = 0;
 
         // Yield this thread now
         interrupt->YieldOnReturn();
@@ -118,7 +116,6 @@ Initialize(int argc, char **argv)
     int argCount, i;
     char* debugArgs = "";
     bool randomYield = FALSE;
-    tickCount = 0;
 
     initializedConsoleSemaphores = false;
     numPagesAllocated = 0;

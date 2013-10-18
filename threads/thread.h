@@ -95,6 +95,7 @@ class Thread {
     double cpu_burst_estimate; // the estimated value
     int wait_time_start; // waiting time for the threads
     int wait_time; // to store the total wait time of the thread
+    int tickCount; // For quantum ticks
 
     static int threadCount; // total number of threads
 
