@@ -58,10 +58,6 @@ StartProcess(char *filename)
     // This is when this thread gets started for the first time
     currentThread->start_time = stats->totalTicks;
 
-    // Set the scheduling type
-    scheduler->scheduler_type = 1;
-    DEBUG('s', "Scheduling algorithm is \"%d\"\n", scheduler->scheduler_type);
-
     machine->Run();			// jump to the user progam
     ASSERT(FALSE);			// machine->Run never returns;
     // the address space exits
@@ -107,13 +103,23 @@ RunBatchProcess(char *filename) {
     k=0; ++i;
     scheduler->scheduler_type = atoi(name);
 
-    // Operations according to the type of algorithm
+    // Set the quantum according to the scheduler type
     switch(scheduler->scheduler_type) {
         case 3: scheduler->quantum = 2800;
                 break;
         case 4: scheduler->quantum = 1400;
                 break;
         case 5: scheduler->quantum = 700;
+                break;
+        case 6: scheduler->quantum = 3000;
+                break;
+        case 7: scheduler->quantum = 2800;
+                break;
+        case 8: scheduler->quantum = 1400;
+                break;
+        case 9: scheduler->quantum = 700;
+                break;
+        case 10: scheduler->quantum = 3000;
                 break;
         default: 
                 break;

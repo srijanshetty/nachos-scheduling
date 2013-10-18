@@ -69,12 +69,26 @@ extern void Cleanup();
 static void
 TimerInterruptHandler(int dummy)
 {
-    // Return for non-preemptive scheduling
-    if(scheduler->scheduler_type == 1 || scheduler->scheduler_type == 2) {
+    if (scheduler->scheduler_type == 0) {
+        // The default NachOS implementation
+        TimeSortedWaitQueue *ptr;
+        if (interrupt->getStatus() != IdleMode) {
+            // Check the head of the sleep queue
+            while ((sleepQueueHead != NULL) && (sleepQueueHead->GetWhen() <= (unsigned)stats->totalTicks)) {
+               sleepQueueHead->GetThread()->Schedule();
+               ptr = sleepQueueHead;
+               sleepQueueHead = sleepQueueHead->GetNext();
+               delete ptr;
+            }
+            //printf("[%d] Timer interrupt.\n", stats->totalTicks);
+            interrupt->YieldOnReturn();
+        }
+    } else if(scheduler->scheduler_type == 1 || scheduler->scheduler_type == 2) {
+        // Non preemptive scheduling
         return;
     } 
 
-    // Check if the quantum has expired or not
+    // QUANTUM BASED SCHEDULING
     currentThread->tickCount++;
     DEBUG('s', "\n[ pid %d ] TickCount %d\n", currentThread->GetPID(), currentThread->tickCount);
     if(currentThread->tickCount == scheduler->quantum/100) {
@@ -83,21 +97,6 @@ TimerInterruptHandler(int dummy)
         // Yield this thread now
         interrupt->YieldOnReturn();
         return;
-    }
-
-    return;
-    
-    TimeSortedWaitQueue *ptr;
-    if (interrupt->getStatus() != IdleMode) {
-        // Check the head of the sleep queue
-        while ((sleepQueueHead != NULL) && (sleepQueueHead->GetWhen() <= (unsigned)stats->totalTicks)) {
-           sleepQueueHead->GetThread()->Schedule();
-           ptr = sleepQueueHead;
-           sleepQueueHead = sleepQueueHead->GetNext();
-           delete ptr;
-        }
-        //printf("[%d] Timer interrupt.\n", stats->totalTicks);
-	interrupt->YieldOnReturn();
     }
 }
 
