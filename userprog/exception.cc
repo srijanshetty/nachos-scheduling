@@ -59,10 +59,6 @@ extern void StartProcess (char*);
 void
 ForkStartFunction (int dummy)
 {
-    // This is when this thread gets started for the first time
-    currentThread->start_time = stats->totalTicks;
-    currentThread->cpu_burst_start = currentThread->start_time;
-
     currentThread->Startup();
     machine->Run();
 }

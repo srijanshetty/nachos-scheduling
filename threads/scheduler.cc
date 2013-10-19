@@ -64,6 +64,7 @@ Scheduler::ReadyToRun (Thread *thread)
     // Start the wait time of the thread
     thread->setStatus(READY);
 
+    // To compute the wait time of the thread
     thread->wait_time_start = stats->totalTicks;
 
     // For SJF
@@ -139,16 +140,18 @@ Scheduler::Run (Thread *nextThread)
     oldThread->CheckOverflow();		    // check if the old thread
 					    // had an undetected stack overflow
 
+    // Reset the quantum of the oldThread
+    oldThread->tickCount = 0;
+    oldThread->total_time += stats->totalTicks - oldThread->start_time;
+
     currentThread = nextThread;		    // switch to the next thread
     currentThread->setStatus(RUNNING);      // nextThread is now running
   
     // This is where the cpu_burst_start of the thread starts
     nextThread->cpu_burst_start = stats->totalTicks;
+    nextThread->start_time = stats->totalTicks;
     nextThread->wait_time += stats->totalTicks - nextThread->wait_time_start;
 
-    // Reset the quantum of the oldThread
-    oldThread->tickCount = 0;
-    
     DEBUG('t', "Switching from thread \"%d\" to thread \"%d\"\n",
 	  oldThread->GetPID(), nextThread->GetPID());
     

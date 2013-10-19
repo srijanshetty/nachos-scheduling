@@ -21,10 +21,6 @@
 void
 BatchStartFunction(int dummy)
 {
-    // This is when this thread gets started for the first time
-    currentThread->start_time = stats->totalTicks;
-    currentThread->cpu_burst_start = currentThread->start_time;
-
     currentThread->Startup();
     DEBUG('t', "Running thread \"%d\" for the first time\n", currentThread->GetPID());
     // Call the start_time function over her

@@ -3,8 +3,8 @@
 int
 main()
 {
-    PrintString("Before calling Exec.\n");
+    //PrintString("Before calling Exec.\n");
     Exec("../test/vectorsum");
-    PrintString("Returned from Exec.\n"); // Should never return
+    //PrintString("Returned from Exec.\n"); // Should never return
     return 0;
 }

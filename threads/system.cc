@@ -98,7 +98,7 @@ TimerInterruptHandler(int dummy)
         interrupt->YieldOnReturn();
         return;
     }
-}
+} 
 
 //----------------------------------------------------------------------
 // Initialize
@@ -188,6 +188,9 @@ Initialize(int argc, char **argv)
     currentThread = NULL;
     currentThread = new Thread("main");		
     currentThread->setStatus(RUNNING);
+
+    // This is only for the main thread and no other thread
+    currentThread->start_time = stats->totalTicks;
 
     interrupt->Enable();
     CallOnUserAbort(Cleanup);			// if user hits ctl-C

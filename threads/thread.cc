@@ -51,7 +51,7 @@ Thread::Thread(char* threadName)
     // The three variables defined below are to compute the CPU 
     // utilization and other parameters of the process
     start_time = 0;
-    end_time = 0;
+    total_time = 0;
     cpu_time = 0;
     cpu_burst_start = 0;
     cpu_burst_previous = 0.0; 
@@ -59,6 +59,8 @@ Thread::Thread(char* threadName)
     wait_time = 0;
     wait_time_start = 0;
     tickCount = 0;
+    block_time = 0;
+    block_start = 0;
 
     threadArray[thread_index] = this;
     pid = thread_index;
@@ -74,7 +76,7 @@ Thread::Thread(char* threadName)
     waitchild_id = -1;
 
     for (i=0; i<MAX_CHILD_COUNT; i++) exitedChild[i] = false;
-    DEBUG('b', "Creating \"%d\" with name \"%s\" with priority %d\n",pid, threadName, base_priority);
+    DEBUG('s', "Creating \"%d\" base priority %d\n",pid, base_priority);
 
     // Increment the threadCount
     threadCount++;
@@ -102,7 +104,7 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
     // The three variables defined below are to compute the CPU 
     // utilization and other parameters of the process
     start_time = 0;
-    end_time = 0;
+    total_time = 0;
     cpu_time = 0;
     cpu_burst_start = 0;
     cpu_burst_previous = 0.0; 
@@ -110,6 +112,8 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
     wait_time = 0;
     wait_time_start = 0;
     tickCount = 0;
+    block_time = 0;
+    block_start = 0;
 
     threadArray[thread_index] = this;
     pid = thread_index;
@@ -129,7 +133,7 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
     waitchild_id = -1;
 
     for (i=0; i<MAX_CHILD_COUNT; i++) exitedChild[i] = false;
-    DEBUG('b', "Creating \"%d\" with name \"%s\" with priority %d\n",pid, threadName, base_priority);
+    DEBUG('s', "Creating \"%d\" base priority %d\n",pid, base_priority);
 
     // Increment the threadCount
     threadCount++;
@@ -295,7 +299,18 @@ Thread::Exit (bool terminateSim, int exitcode)
 
     Thread *nextThread;
 
+    // Update the information about the currentThread, with is the currentThread right now
+    currentThread->cpu_burst_previous = stats->totalTicks - currentThread->cpu_burst_start;
+    currentThread->cpu_time += currentThread->cpu_burst_previous;
+
+    DEBUG('s', "\n[ pid %d ] start time %d, current time %d, CPU burst time %d\n", 
+            currentThread->GetPID(), currentThread->cpu_burst_start, 
+            stats->totalTicks, currentThread->cpu_burst_previous);
+
     status = BLOCKED;
+
+    // Note the time for which the thread is blocked
+    currentThread->block_start = stats->totalTicks;
 
     // Set exit code in parent's structure provided the parent hasn't exited
     if (ppid != -1) {
@@ -312,13 +327,6 @@ Thread::Exit (bool terminateSim, int exitcode)
     
     while ((nextThread = scheduler->FindNextToRun()) == NULL) {
         if (terminateSim) {
-           // Printing the statistics of this thread as this is about to exit
-           currentThread->end_time = stats->totalTicks;
-           DEBUG('s' , "\nThread \"%d\" total %d, cpu %d, wait %d\n", 
-                   currentThread->GetPID(),
-                   (currentThread->end_time - currentThread->start_time), 
-                   currentThread->cpu_time, currentThread->wait_time);
-
             DEBUG('i', "Machine idle.  No interrupts to do.\n");
             printf("\nNo threads ready or runnable, and no pending interrupts.\n");
             printf("Assuming all programs completed.\n");
@@ -327,12 +335,14 @@ Thread::Exit (bool terminateSim, int exitcode)
         else interrupt->Idle();      // no one to run, wait for an interrupt
     }
 
-   // Printing the statistics of this thread as this is about to exit
-   currentThread->end_time = stats->totalTicks;
-   DEBUG('s' , "\nThread \"%d\" total %d, cpu %d, wait %d\n", 
-           currentThread->GetPID(),
-           (currentThread->end_time - currentThread->start_time), 
-           currentThread->cpu_time, currentThread->wait_time);
+    // Printing the statistics of this thread as this is about to exit
+    currentThread->block_time += stats->totalTicks - currentThread->block_start;
+    currentThread->total_time += stats->totalTicks - currentThread->start_time;
+    DEBUG('s' , "\nThread \"%d\" total %d, cpu %d, wait %d block %d\n", 
+            currentThread->GetPID(),
+            currentThread->total_time, 
+            currentThread->cpu_time, currentThread->wait_time, 
+            currentThread->block_time);
 
     scheduler->Run(nextThread); // returns when we've been signalled
 }
@@ -367,8 +377,6 @@ Thread::Yield ()
     
     nextThread = scheduler->FindNextToRun();
     if (nextThread != NULL) {
-        scheduler->ReadyToRun(this);
-
         // Update the information about the currentThread, with is the currentThread right now
         currentThread->cpu_burst_previous = stats->totalTicks - currentThread->cpu_burst_start;
         currentThread->cpu_time += currentThread->cpu_burst_previous;
@@ -377,6 +385,7 @@ Thread::Yield ()
                 currentThread->GetPID(), currentThread->cpu_burst_start, 
                 stats->totalTicks, currentThread->cpu_burst_previous);
 
+        scheduler->ReadyToRun(this);
         scheduler->Run(nextThread);
     }
     (void) interrupt->SetLevel(oldLevel);
@@ -420,10 +429,14 @@ Thread::Sleep ()
             stats->totalTicks, currentThread->cpu_burst_previous);
 
     status = BLOCKED;
+
+    // To compute the block time
+    currentThread->block_start = stats->totalTicks;
     while ((nextThread = scheduler->FindNextToRun()) == NULL) {
-	interrupt->Idle();	// no one to run, wait for an interrupt
+        interrupt->Idle();	// no one to run, wait for an interrupt
     }
-        
+
+    currentThread->block_time += stats->totalTicks - currentThread->block_start;
     scheduler->Run(nextThread); // returns when we've been signalled
 }
 

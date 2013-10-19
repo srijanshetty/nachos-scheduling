@@ -32,4 +32,5 @@ bin/coff2noff
 test/forkjoin_hard
 test/testloop
 userprog/batch*
+userprog/temp
 test/testburst.c

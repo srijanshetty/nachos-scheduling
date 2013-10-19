@@ -88,7 +88,7 @@ class Thread {
     // The following variables will be used to computer the cpu utilization of 
     // the process
     int start_time; // To store the time when the program started executing
-    int end_time; // To store the time when the process stopped executing
+    int total_time; // total time of the thread
     int cpu_time; // Stores the amount of cpu time of the process
     int cpu_burst_start; // When the cpu burst starts   
     int cpu_burst_previous; // This is the previous CPU burst time
@@ -96,6 +96,8 @@ class Thread {
     int wait_time_start; // waiting time for the threads
     int wait_time; // to store the total wait time of the thread
     int tickCount; // For quantum ticks
+    int block_time; // stores the time for which the thread is blocked
+    int block_start; // start time of block
 
     static int threadCount; // total number of threads
 
@@ -126,6 +128,7 @@ class Thread {
     void CheckOverflow();   			// Check if thread has 
 						// overflowed its stack
     void setStatus(ThreadStatus st) { status = st; }
+    int getStatus() { return status;  }
     char* getName() { return (name); }
     void Print() { printf("%s, ", name); }
 
