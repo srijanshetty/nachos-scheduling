@@ -38,7 +38,6 @@
 #define THREAD_H
 
 #define MAX_CHILD_COUNT 100
-#define MAX_THREADS 200
 
 #include "copyright.h"
 #include "utility.h"
@@ -102,6 +101,8 @@ class Thread {
     static int threadCount; // total number of threads
 
     int base_priority; // The priority of the thread
+    int priority; // to store the priority of the process
+
     Thread(char* debugName);		// initialize a Thread 
     Thread(char* debugName, int newPriority, bool orphan);		// initialize a Thread with priority 
     ~Thread(); 				// deallocate a Thread

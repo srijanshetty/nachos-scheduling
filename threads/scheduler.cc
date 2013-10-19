@@ -36,6 +36,12 @@ Scheduler::Scheduler()
 
     // QUANTUM BASED SCHEDULING
     quantum = 0;
+
+    // UNIX SCHEDULING
+    int i;
+    for(i=0; i<MAX_THREAD_COUNT; ++i) {
+        cpu_count[i] = 0;
+    }
 } 
 
 //----------------------------------------------------------------------
@@ -59,8 +65,6 @@ Scheduler::~Scheduler()
 void
 Scheduler::ReadyToRun (Thread *thread)
 {
-    DEBUG('t', "Putting thread \"%d\" on ready list.\n", thread->GetPID());
-
     // Start the wait time of the thread
     thread->setStatus(READY);
 
@@ -84,11 +88,12 @@ Scheduler::ReadyToRun (Thread *thread)
         readyList->SortedInsert((void *)thread, estimate);
     } else if ( scheduler_type >= 7 && scheduler_type <=10 ) {
         // For UNIX scheduling
-        // Compute the priority and add it to the readyList
-        readyList->Append((void *)thread);
+        readyList->SortedInsert((void *)thread, thread->priority);
     } else {
         readyList->Append((void *)thread);
     }
+
+    DEBUG('t', "Putting thread \"%d\" on ready list with priority %d.\n", thread->GetPID(), thread->priority);
 }
 
 //----------------------------------------------------------------------
@@ -102,13 +107,12 @@ Scheduler::ReadyToRun (Thread *thread)
 Thread *
 Scheduler::FindNextToRun ()
 {
-    // SJF Scheduling
-    if(scheduler_type == 2) {
+    if(scheduler_type == 0 || scheduler_type == 1) 
+        return (Thread *)readyList->Remove();
+    else {
         int key;
         return (Thread *)readyList->SortedRemove(&key); 
     }
-    else
-        return (Thread *)readyList->Remove();
 }
 
 //----------------------------------------------------------------------
@@ -139,6 +143,22 @@ Scheduler::Run (Thread *nextThread)
     
     oldThread->CheckOverflow();		    // check if the old thread
 					    // had an undetected stack overflow
+
+    // FOR UNIX SCHEDULING
+    if (scheduler_type >= 7 && scheduler_type <= 10) {
+        int i, pid = oldThread->GetPID();
+
+        // Update the cpu_count
+        cpu_count[pid] = oldThread->cpu_burst_previous;
+
+        // Half all the cpu_counts
+        for(i=0; i<MAX_THREAD_COUNT; ++i) {
+            cpu_count[i] = cpu_count[i] / 2;
+        }
+
+        // Update the priority of this process
+        oldThread->priority += cpu_count[pid];
+    }
 
     // Reset the quantum of the oldThread
     oldThread->tickCount = 0;

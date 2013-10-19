@@ -43,7 +43,6 @@ Thread::Thread(char* threadName)
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
-    base_priority = 50;
 #ifdef USER_PROGRAM
     space = NULL;
 #endif
@@ -76,6 +75,9 @@ Thread::Thread(char* threadName)
     waitchild_id = -1;
 
     for (i=0; i<MAX_CHILD_COUNT; i++) exitedChild[i] = false;
+
+    base_priority = 50;
+    priority = base_priority;
     DEBUG('s', "Creating \"%d\" base priority %d\n",pid, base_priority);
 
     // Increment the threadCount
@@ -96,7 +98,6 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
-    base_priority = 50 + newPriority; //set priority of the thread
 #ifdef USER_PROGRAM
     space = NULL;
 #endif
@@ -133,6 +134,9 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
     waitchild_id = -1;
 
     for (i=0; i<MAX_CHILD_COUNT; i++) exitedChild[i] = false;
+
+    base_priority = 50 + newPriority; //set priority of the thread
+    priority = base_priority;
     DEBUG('s', "Creating \"%d\" base priority %d\n",pid, base_priority);
 
     // Increment the threadCount
