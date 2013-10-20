@@ -77,18 +77,18 @@ Scheduler::ReadyToRun (Thread *thread)
         double estimate = alpha*thread->cpu_burst_previous 
                         + ( 1- alpha )*thread->cpu_burst_estimate;
 
-        DEBUG('s', "\n[ pid %d ] E(n) %f E(n-1) %f burst %d\n", 
-                currentThread->GetPID(), estimate,
-                currentThread->cpu_burst_estimate,
-                currentThread->cpu_burst_previous);
+        DEBUG('e', "\n[ pid %d ] E(n) %f E(n-1) %f burst %d\n", 
+                thread->GetPID(), estimate,
+                thread->cpu_burst_estimate,
+                thread->cpu_burst_previous);
 
         thread->cpu_burst_estimate = estimate;
 
         // Add to the readyList
         readyList->SortedInsert((void *)thread, estimate);
     } else if ( scheduler_type >= 7 && scheduler_type <=10 ) {
-        // For UNIX scheduling
-        readyList->SortedInsert((void *)thread, thread->priority);
+        // Append this thread and then update the readyList
+        readyList->Append((void *)thread);
     } else {
         readyList->Append((void *)thread);
     }
@@ -109,7 +109,10 @@ Scheduler::FindNextToRun ()
 {
     if(scheduler_type == 0 || scheduler_type == 1) 
         return (Thread *)readyList->Remove();
-    else {
+    else if ( scheduler_type >= 7 && scheduler_type <=10 ) {
+        // Remove the minimum element
+        return (Thread *)readyList->Remove();
+    } else {
         int key;
         return (Thread *)readyList->SortedRemove(&key); 
     }
@@ -151,13 +154,18 @@ Scheduler::Run (Thread *nextThread)
         // Update the cpu_count
         cpu_count[pid] += oldThread->cpu_burst_previous;
 
-        // Half all the cpu_counts
+        // Half all the cpu_counts and update the priorities of all threads
         for(i=0; i<MAX_THREAD_COUNT; ++i) {
-            cpu_count[i] = cpu_count[i] / 2;
+            cpu_count[i] = cpu_count[i]/2;
         }
 
-        // Update the priority of this process
-        oldThread->priority += cpu_count[pid]/2;
+        // Now update the priorities of the threads
+        Thread *tempThread;
+        for(ListElement *ptr = threadPriorityList->first; ptr!=NULL; ptr=ptr->next) {
+            tempThread = (Thread *)ptr;
+            tempThread->priority += cpu_count[tempThread->GetPID()]/2;
+            DEBUG('l', "Pri %d Thread %d\n", tempThread->priority, tempThread->GetPID());
+        }
     }
 
     // Reset the quantum of the oldThread

@@ -42,6 +42,7 @@ class Scheduler {
 
     // UNIX SCHEDULING
     int cpu_count[MAX_THREAD_COUNT];
+    List threadPriorityList[MAX_THREAD_COUNT];
 
   private:
     List *readyList;  		// queue of threads that are ready to run,
