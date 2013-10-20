@@ -30,6 +30,7 @@
 Scheduler::Scheduler()
 { 
     readyList = new List; 
+    threadPriorityList = new List;
 
     // SHORTEST JOB FIRST
     alpha = 0.5;
@@ -86,9 +87,6 @@ Scheduler::ReadyToRun (Thread *thread)
 
         // Add to the readyList
         readyList->SortedInsert((void *)thread, estimate);
-    } else if ( scheduler_type >= 7 && scheduler_type <=10 ) {
-        // Append this thread and then update the readyList
-        readyList->Append((void *)thread);
     } else {
         readyList->Append((void *)thread);
     }
@@ -107,11 +105,68 @@ Scheduler::ReadyToRun (Thread *thread)
 Thread *
 Scheduler::FindNextToRun ()
 {
-    if(scheduler_type == 0 || scheduler_type == 1) 
+    if(scheduler_type == 0 || scheduler_type == 1) {
         return (Thread *)readyList->Remove();
-    else if ( scheduler_type >= 7 && scheduler_type <=10 ) {
-        // Remove the minimum element
+    } else if ( scheduler_type >= 7 && scheduler_type <=10 ) {
+
+        Thread *tempThread1;
+        DEBUG('e', "\nListing Threads\n");
+        for(ListElement *ptr1 = scheduler->readyList->first; ptr1!=NULL; ptr1=ptr1->next) {
+            tempThread1 = (Thread *)ptr1->item;
+            DEBUG('e', "Thread %d Priority %d\n", tempThread1->GetPID(), tempThread1->priority);
+        }
+
+        // First find the minimum element
+        ListElement *minPtr = scheduler->readyList->first;
+        if(minPtr == NULL) {
+            return NULL;
+        }
+
+        int min = ((Thread *)minPtr->item)->priority;
+        Thread *tempThread = (Thread *)minPtr->item;
+        Thread *minThread = tempThread;
+        ListElement *ptr = minPtr;
+
+        while(ptr!=NULL) {
+           tempThread = (Thread *)ptr->item;
+
+           if(tempThread->priority <= min) {
+               minPtr = ptr;
+               min = tempThread->priority;
+               minThread = tempThread;
+           }
+           ptr=ptr->next;
+        }
+
+        DEBUG('u', "Minmum %d", minThread->GetPID());
+
         return (Thread *)readyList->Remove();
+        // el
+        // DELETE THE ELEMENT
+        ptr = scheduler->readyList->first;
+        if(ptr == scheduler->readyList->last){
+            scheduler->readyList->last == NULL;
+            scheduler->readyList->first == NULL;
+        } else {
+            if (ptr == minPtr) {
+                scheduler->readyList->first = ptr->next;
+            }
+
+            ListElement *prev = ptr;
+            ptr = ptr->next;
+            while(ptr!=NULL) {
+                if(ptr == minPtr) {
+                    prev->next = ptr->next;
+                    if(ptr == scheduler->readyList->last) {
+                        scheduler->readyList->last = prev;
+                    }
+                }
+                ptr = ptr->next;
+            }
+        }
+
+        delete minPtr;
+        return minThread;
     } else {
         int key;
         return (Thread *)readyList->SortedRemove(&key); 
@@ -146,7 +201,7 @@ Scheduler::Run (Thread *nextThread)
     
     oldThread->CheckOverflow();		    // check if the old thread
 					    // had an undetected stack overflow
-
+                        
     // FOR UNIX SCHEDULING
     if (scheduler_type >= 7 && scheduler_type <= 10) {
         int i, pid = oldThread->GetPID();
@@ -161,10 +216,12 @@ Scheduler::Run (Thread *nextThread)
 
         // Now update the priorities of the threads
         Thread *tempThread;
+        DEBUG('u', "\nUpdate initaited by thread %d with burst %d\n", 
+                oldThread->GetPID(), oldThread->cpu_burst_previous);
         for(ListElement *ptr = threadPriorityList->first; ptr!=NULL; ptr=ptr->next) {
-            tempThread = (Thread *)ptr;
+            tempThread = (Thread *)ptr->item;
             tempThread->priority += cpu_count[tempThread->GetPID()]/2;
-            DEBUG('l', "Pri %d Thread %d\n", tempThread->priority, tempThread->GetPID());
+            DEBUG('u', "Priority %d Thread %d\n", tempThread->priority, tempThread->GetPID());
         }
     }
 

@@ -140,6 +140,7 @@ RunBatchProcess(char *filename) {
             thread->SaveUserState();		// load page table register
             thread->StackAllocate(BatchStartFunction, 0);	// Make it ready for a later context switch
             thread->Schedule();
+            scheduler->threadPriorityList->Append((void *) thread);
             delete programfile;			// close file
         } else {
             // This is the normal case when priority has been suplied

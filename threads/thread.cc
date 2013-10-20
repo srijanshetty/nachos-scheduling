@@ -78,9 +78,7 @@ Thread::Thread(char* threadName)
 
     base_priority = 50;
     priority = base_priority;
-
-    // add the thread to the thread to the priority list
-    scheduler->threadPriorityList->Append((void *)this);
+    scheduler->threadPriorityList->Append((void *) this);
     DEBUG('s', "Creating \"%d\" base priority %d\n",pid, base_priority);
 
     // Increment the threadCount
@@ -140,9 +138,7 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
 
     base_priority = 50 + newPriority; //set priority of the thread
     priority = base_priority;
-
-    // add the thread to the thread to the priority list
-    scheduler->threadPriorityList->Append((void *)this);
+    scheduler->threadPriorityList->Append((void *) this);
     DEBUG('s', "Creating \"%d\" base priority %d\n",pid, base_priority);
 
     // Increment the threadCount
@@ -303,22 +299,31 @@ Thread::Exit (bool terminateSim, int exitcode)
     (void) interrupt->SetLevel(IntOff);
     ASSERT(this == currentThread);
 
-    //Remove the current thread from the thread priority list
-    //ListElement *prev = threadPriorityList->first;
-    //Thread *tempThread = (Thread *)prev;
-    //if ( tempThread == currentThread ) {
-    //}
-    //for(ListElement *ptr = prev->next; ptr!=NULL; ptr=ptr->next) {
-     //   tempThread = (Thread *)ptr;
-     //   if ( tempThread == currentThread ) {
-     //       if( ptr->next != NULL ) {
-     //           ptr->next = ptr->next->next;
-     //       }
-      //  }
-    //}
-
-
     DEBUG('t', "Finishing thread \"%d\"\n", GetPID());
+
+    // Remove the thread from the threadPriorityList
+    if ( scheduler->scheduler_type >=7 && scheduler->scheduler_type <=10 ) {
+        // Now update the priorities of the threads
+        ListElement *prev = scheduler->threadPriorityList->first;
+        Thread *tempThread = (Thread *)prev->item;
+
+        if(prev->next == NULL) {
+            DEBUG('u', "Removing thread \"%d\" from threadPriorityList", tempThread->GetPID());
+            terminateSim = true;
+        } else if (tempThread == currentThread) {
+            DEBUG('u', "Removing thread \"%d\" from threadPriorityList", tempThread->GetPID());
+            scheduler->threadPriorityList->first = prev->next;
+        } else {
+            for(ListElement *ptr = prev->next; ptr!=NULL; ptr=ptr->next) {
+                tempThread = (Thread *)ptr->item;
+                if(tempThread == currentThread){
+                    DEBUG('u', "Removing thread %d from threadPriorityList", tempThread->GetPID());
+                    prev->next = ptr->next;
+                }
+                prev = ptr;
+            }
+        }
+    }
 
     threadToBeDestroyed = currentThread;
 
@@ -399,10 +404,8 @@ Thread::Yield ()
     
     DEBUG('t', "Yielding thread \"%d\"\n", pid);
     
-    if ( scheduler->scheduler_type >= 7 && scheduler->scheduler_type <= 10) {
-        scheduler->ReadyToRun(this);
-    }
     nextThread = scheduler->FindNextToRun();
+
     if (nextThread != NULL) {
         // Update the information about the currentThread, with is the currentThread right now
         currentThread->cpu_burst_previous = stats->totalTicks - currentThread->cpu_burst_start;
@@ -412,9 +415,7 @@ Thread::Yield ()
                 currentThread->GetPID(), currentThread->cpu_burst_start, 
                 stats->totalTicks, currentThread->cpu_burst_previous);
 
-        if ( scheduler->scheduler_type >= 0 && scheduler->scheduler_type <= 6) {
-            scheduler->ReadyToRun(this);
-        }
+        scheduler->ReadyToRun(this);
         scheduler->Run(nextThread);
     }
     (void) interrupt->SetLevel(oldLevel);
