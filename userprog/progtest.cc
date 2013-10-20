@@ -107,15 +107,15 @@ RunBatchProcess(char *filename) {
                 break;
         case 5: scheduler->quantum = 700;
                 break;
-        case 6: scheduler->quantum = 3000;
+        case 6: scheduler->quantum = 500;
                 break;
         case 7: scheduler->quantum = 2800;
                 break;
         case 8: scheduler->quantum = 1400;
                 break;
-        case 9: scheduler->quantum = 700;
+        case 9: scheduler->quantum = 500;
                 break;
-        case 10: scheduler->quantum = 3000;
+        case 10: scheduler->quantum = 800;
                 break;
         default: 
                 break;
@@ -171,8 +171,6 @@ RunBatchProcess(char *filename) {
     }
 
     // The main thread exits after this
-    currentThread->cpu_burst_previous = stats->totalTicks - currentThread->cpu_burst_start;
-    currentThread->cpu_time += currentThread->cpu_burst_previous;
     currentThread->Exit(false, 0);
 }
 

@@ -30,7 +30,8 @@ test/testyield
 test/vectorsum
 bin/coff2noff
 test/forkjoin_hard
-test/testloop
+test/testloop*
 userprog/batch*
 userprog/temp
+userprog/test.sh
 test/testburst.c

@@ -33,8 +33,8 @@ Statistics::Statistics()
 void
 Statistics::Print()
 {
-    printf("Ticks: total %d, idle %d, system %d, user %d\n", totalTicks, 
-	idleTicks, systemTicks, userTicks);
+    printf("Ticks: total %d idle %d system %d user %d util %f\n", totalTicks, 
+	idleTicks, systemTicks, userTicks, (systemTicks+userTicks)/(double)totalTicks);
     printf("Disk I/O: reads %d, writes %d\n", numDiskReads, numDiskWrites);
     printf("Console I/O: reads %d, writes %d\n", numConsoleCharsRead, 
 	numConsoleCharsWritten);

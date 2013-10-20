@@ -149,7 +149,7 @@ Scheduler::Run (Thread *nextThread)
         int i, pid = oldThread->GetPID();
 
         // Update the cpu_count
-        cpu_count[pid] = oldThread->cpu_burst_previous;
+        cpu_count[pid] += oldThread->cpu_burst_previous;
 
         // Half all the cpu_counts
         for(i=0; i<MAX_THREAD_COUNT; ++i) {
@@ -157,7 +157,7 @@ Scheduler::Run (Thread *nextThread)
         }
 
         // Update the priority of this process
-        oldThread->priority += cpu_count[pid];
+        oldThread->priority += cpu_count[pid]/2;
     }
 
     // Reset the quantum of the oldThread

@@ -342,9 +342,8 @@ Thread::Exit (bool terminateSim, int exitcode)
     // Printing the statistics of this thread as this is about to exit
     currentThread->block_time += stats->totalTicks - currentThread->block_start;
     currentThread->total_time += stats->totalTicks - currentThread->start_time;
-    DEBUG('s' , "\nThread \"%d\" total %d, cpu %d, wait %d block %d\n", 
+    DEBUG('s' , "\nThread \"%d\" cpu %d wait %d block %d\n", 
             currentThread->GetPID(),
-            currentThread->total_time, 
             currentThread->cpu_time, currentThread->wait_time, 
             currentThread->block_time);
 

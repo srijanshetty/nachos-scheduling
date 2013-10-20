@@ -191,6 +191,7 @@ Initialize(int argc, char **argv)
 
     // This is only for the main thread and no other thread
     currentThread->start_time = stats->totalTicks;
+    currentThread->cpu_burst_start = stats->totalTicks;
 
     interrupt->Enable();
     CallOnUserAbort(Cleanup);			// if user hits ctl-C
