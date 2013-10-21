@@ -78,7 +78,6 @@ Thread::Thread(char* threadName)
 
     base_priority = 50;
     priority = base_priority;
-    scheduler->threadPriorityList->Append((void *) this);
     DEBUG('s', "Creating \"%d\" base priority %d\n",pid, base_priority);
 
     // Increment the threadCount
@@ -138,7 +137,6 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
 
     base_priority = 50 + newPriority; //set priority of the thread
     priority = base_priority;
-    scheduler->threadPriorityList->Append((void *) this);
     DEBUG('s', "Creating \"%d\" base priority %d\n",pid, base_priority);
 
     // Increment the threadCount
@@ -300,35 +298,6 @@ Thread::Exit (bool terminateSim, int exitcode)
     ASSERT(this == currentThread);
 
     DEBUG('t', "Finishing thread \"%d\"\n", GetPID());
-
-    // Remove the thread from the threadPriorityList
-    if ( scheduler->scheduler_type >=7 && scheduler->scheduler_type <=10 ) {
-        // Now update the priorities of the threads
-        ListElement *prev = scheduler->threadPriorityList->first;
-        Thread *tempThread = (Thread *)prev->item;
-
-        if(prev->next == NULL) {
-            DEBUG('u', "Removing thread \"%d\" from threadPriorityList", tempThread->GetPID());
-            delete prev;
-            terminateSim = true;
-        } else if (tempThread == currentThread) {
-            DEBUG('u', "Removing thread \"%d\" from threadPriorityList", tempThread->GetPID());
-            scheduler->threadPriorityList->first = prev->next;
-            delete prev;
-        } else {
-            for(ListElement *ptr = prev->next; ptr!=NULL; ptr=ptr->next) {
-                tempThread = (Thread *)ptr->item;
-                if(tempThread == currentThread){
-                    DEBUG('u', "Removing thread %d from threadPriorityList", tempThread->GetPID());
-                    prev->next = ptr->next;
-                    break;delete prev;
-                    delete ptr;
-                }
-                prev = ptr;
-            }
-        }
-    }
-
     threadToBeDestroyed = currentThread;
 
     Thread *nextThread;

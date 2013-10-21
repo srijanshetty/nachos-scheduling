@@ -30,7 +30,6 @@
 Scheduler::Scheduler()
 { 
     readyList = new List; 
-    threadPriorityList = new List;
 
     // SHORTEST JOB FIRST
     alpha = 0.5;
@@ -200,22 +199,20 @@ Scheduler::Run (Thread *nextThread)
     if (scheduler_type >= 7 && scheduler_type <= 10) {
         int i, pid = oldThread->GetPID();
 
+        DEBUG('U', "\nUpdate initiated by %d time %d burst %d\n",
+                currentThread->GetPID(), stats->totalTicks,
+                currentThread->cpu_burst_previous);
+
         // Update the cpu_count
         cpu_count[pid] += oldThread->cpu_burst_previous;
 
         // Half all the cpu_counts and update the priorities of all threads
         for(i=0; i<MAX_THREAD_COUNT; ++i) {
             cpu_count[i] = cpu_count[i]/2;
-        }
-
-        // Now update the priorities of the threads
-        Thread *tempThread;
-        DEBUG('u', "\nUpdate initaited by thread %d with burst %d\n", 
-                oldThread->GetPID(), oldThread->cpu_burst_previous);
-        for(ListElement *ptr = threadPriorityList->first; ptr!=NULL; ptr=ptr->next) {
-            tempThread = (Thread *)ptr->item;
-            tempThread->priority += cpu_count[tempThread->GetPID()]/2;
-            DEBUG('u', "Priority %d Thread %d\n", tempThread->priority, tempThread->GetPID());
+            if(threadArray[i] != NULL) {
+                threadArray[i]->priority += cpu_count[i]/2;
+                DEBUG('U', "Thread %i Priority %d\n", i, threadArray[i]->priority);
+            }
         }
     }
 
