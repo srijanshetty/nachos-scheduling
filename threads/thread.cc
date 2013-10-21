@@ -60,6 +60,7 @@ Thread::Thread(char* threadName)
     tickCount = 0;
     block_time = 0;
     block_start = 0;
+    timerYield = false;
 
     threadArray[thread_index] = this;
     pid = thread_index;
@@ -115,6 +116,7 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
     tickCount = 0;
     block_time = 0;
     block_start = 0;
+    timerYield = false;
 
     threadArray[thread_index] = this;
     pid = thread_index;
@@ -380,6 +382,11 @@ Thread::Yield ()
     
     DEBUG('t', "Yielding thread \"%d\"\n", pid);
     
+    // If it is a timerYield then we add this thread to the ready list first and
+    // then compute the next thread
+    if(timerYield) {
+        scheduler->ReadyToRun(this);
+    }
     nextThread = scheduler->FindNextToRun();
 
     if (nextThread != NULL) {
@@ -391,7 +398,10 @@ Thread::Yield ()
                 currentThread->GetPID(), currentThread->cpu_burst_start, 
                 stats->totalTicks, currentThread->cpu_burst_previous);
 
-        scheduler->ReadyToRun(this);
+        if(!timerYield) {
+            scheduler->ReadyToRun(this);
+            timerYield = false;
+        }
         scheduler->Run(nextThread);
     }
     (void) interrupt->SetLevel(oldLevel);

@@ -93,9 +93,11 @@ TimerInterruptHandler(int dummy)
     DEBUG('s', "\n[ pid %d ] TickCount %d time %d\n", 
             currentThread->GetPID(), currentThread->tickCount, stats->totalTicks);
     if(currentThread->tickCount == scheduler->quantum/100) {
+        DEBUG('s', "Qunatum expired for thread %d\n", currentThread->GetPID());
         currentThread->tickCount = 0;
 
         // Yield this thread now
+        currentThread->timerYield = true;
         interrupt->YieldOnReturn();
         return;
     }

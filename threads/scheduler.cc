@@ -72,7 +72,7 @@ Scheduler::ReadyToRun (Thread *thread)
     thread->wait_time_start = stats->totalTicks;
 
     // For SJF
-    if(scheduler_type == 2) {
+    if(scheduler_type == 2 && thread->cpu_burst_previous >0 ){
         //Compute the burst of the thread and then sorted insert
         double estimate = alpha*thread->cpu_burst_previous 
                         + ( 1- alpha )*thread->cpu_burst_estimate;
@@ -199,22 +199,24 @@ Scheduler::Run (Thread *nextThread)
 					    // had an undetected stack overflow
                         
     // FOR UNIX SCHEDULING
-    if (scheduler_type >= 7 && scheduler_type <= 10) {
-        int i, pid = oldThread->GetPID();
+    if(oldThread->cpu_burst_previous > 0) {
+        if (scheduler_type >= 7 && scheduler_type <= 10) {
+            int i, pid = oldThread->GetPID();
 
-        DEBUG('U', "\nUpdate initiated by %d time %d burst %d\n",
-                currentThread->GetPID(), stats->totalTicks,
-                currentThread->cpu_burst_previous);
+            DEBUG('U', "\nUpdate initiated by %d time %d burst %d\n",
+                    currentThread->GetPID(), stats->totalTicks,
+                    currentThread->cpu_burst_previous);
 
-        // Update the cpu_count
-        cpu_count[pid] += oldThread->cpu_burst_previous;
+            // Update the cpu_count
+            cpu_count[pid] += oldThread->cpu_burst_previous;
 
-        // Half all the cpu_counts and update the priorities of all threads
-        for(i=0; i<MAX_THREAD_COUNT; ++i) {
-            cpu_count[i] = cpu_count[i]/2;
-            if(threadArray[i] != NULL) {
-                threadArray[i]->priority += cpu_count[i]/2;
-                DEBUG('U', "Thread %i Priority %d\n", i, threadArray[i]->priority);
+            // Half all the cpu_counts and update the priorities of all threads
+            for(i=0; i<MAX_THREAD_COUNT; ++i) {
+                cpu_count[i] = cpu_count[i]/2;
+                if(threadArray[i] != NULL) {
+                    threadArray[i]->priority += cpu_count[i]/2;
+                    DEBUG('U', "Thread %i Priority %d\n", i, threadArray[i]->priority);
+                }
             }
         }
     }

@@ -97,6 +97,7 @@ class Thread {
     int tickCount; // For quantum ticks
     int block_time; // stores the time for which the thread is blocked
     int block_start; // start time of block
+    bool timerYield; // to note a timer yield
 
     static int threadCount; // total number of threads
 
