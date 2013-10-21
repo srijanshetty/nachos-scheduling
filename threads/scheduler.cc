@@ -107,9 +107,8 @@ Scheduler::FindNextToRun ()
     if(scheduler_type == 0 || scheduler_type == 1) {
         return (Thread *)readyList->Remove();
     } else if ( scheduler_type >= 7 && scheduler_type <=10 ) {
-
-        // First find the minimum element
-        ListElement *minPtr = scheduler->readyList->first;
+        // Find the minimum
+        ListElement *minPtr = readyList->first;
         if(minPtr == NULL) {
             return NULL;
         }
@@ -131,20 +130,19 @@ Scheduler::FindNextToRun ()
         }
 
         Thread *tempThread1;
-        DEBUG('u', "\nListing Threads\n");
+        DEBUG('U', "\nNext to run called by %d at %d\n", currentThread->GetPID(), stats->totalTicks);
         for(ListElement *ptr1 = scheduler->readyList->first; ptr1!=NULL; ptr1=ptr1->next) {
             tempThread1 = (Thread *)ptr1->item;
-            DEBUG('u', "Thread %d Priority %d\n", tempThread1->GetPID(), tempThread1->priority);
+            DEBUG('U', "Thread %d Priority %d\n", tempThread1->GetPID(), tempThread1->priority);
         }
 
-        DEBUG('u', "Minimum %d", minThread->GetPID());
-
-        return (Thread *)readyList->Remove();
+        DEBUG('U', "Minimum %d\n\n", minThread->GetPID());
 
         // DELETE THE ELEMENT
-        ptr = scheduler->readyList->first;
+        ptr = readyList->first;
         if (ptr == minPtr) {
-            scheduler->readyList->first = ptr->next;
+            // corner case of the first thread
+            return (Thread *)readyList->Remove();
         }
 
         ListElement *prev = ptr;
@@ -152,6 +150,11 @@ Scheduler::FindNextToRun ()
         while(ptr!=NULL) {
             if(ptr == minPtr) {
                 prev->next = ptr->next;
+
+                // Corner case of the last threadreadyList->
+                if (ptr == readyList->last) {
+                    readyList->last = prev;
+                }
             }
             prev = ptr;
             ptr = ptr->next;

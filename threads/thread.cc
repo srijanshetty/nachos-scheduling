@@ -302,6 +302,9 @@ Thread::Exit (bool terminateSim, int exitcode)
 
     Thread *nextThread;
 
+    // Update the information in the threadArray
+    threadArray[currentThread->GetPID()] = NULL;
+
     // Update the information about the currentThread, with is the currentThread right now
     currentThread->cpu_burst_previous = stats->totalTicks - currentThread->cpu_burst_start;
     currentThread->cpu_time += currentThread->cpu_burst_previous;
