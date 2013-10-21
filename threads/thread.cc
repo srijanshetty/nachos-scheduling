@@ -309,16 +309,20 @@ Thread::Exit (bool terminateSim, int exitcode)
 
         if(prev->next == NULL) {
             DEBUG('u', "Removing thread \"%d\" from threadPriorityList", tempThread->GetPID());
+            delete prev;
             terminateSim = true;
         } else if (tempThread == currentThread) {
             DEBUG('u', "Removing thread \"%d\" from threadPriorityList", tempThread->GetPID());
             scheduler->threadPriorityList->first = prev->next;
+            delete prev;
         } else {
             for(ListElement *ptr = prev->next; ptr!=NULL; ptr=ptr->next) {
                 tempThread = (Thread *)ptr->item;
                 if(tempThread == currentThread){
                     DEBUG('u', "Removing thread %d from threadPriorityList", tempThread->GetPID());
                     prev->next = ptr->next;
+                    break;delete prev;
+                    delete ptr;
                 }
                 prev = ptr;
             }

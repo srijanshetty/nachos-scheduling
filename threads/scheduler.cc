@@ -109,13 +109,6 @@ Scheduler::FindNextToRun ()
         return (Thread *)readyList->Remove();
     } else if ( scheduler_type >= 7 && scheduler_type <=10 ) {
 
-        Thread *tempThread1;
-        DEBUG('e', "\nListing Threads\n");
-        for(ListElement *ptr1 = scheduler->readyList->first; ptr1!=NULL; ptr1=ptr1->next) {
-            tempThread1 = (Thread *)ptr1->item;
-            DEBUG('e', "Thread %d Priority %d\n", tempThread1->GetPID(), tempThread1->priority);
-        }
-
         // First find the minimum element
         ListElement *minPtr = scheduler->readyList->first;
         if(minPtr == NULL) {
@@ -138,35 +131,36 @@ Scheduler::FindNextToRun ()
            ptr=ptr->next;
         }
 
-        DEBUG('u', "Minmum %d", minThread->GetPID());
+        Thread *tempThread1;
+        DEBUG('u', "\nListing Threads\n");
+        for(ListElement *ptr1 = scheduler->readyList->first; ptr1!=NULL; ptr1=ptr1->next) {
+            tempThread1 = (Thread *)ptr1->item;
+            DEBUG('u', "Thread %d Priority %d\n", tempThread1->GetPID(), tempThread1->priority);
+        }
+
+        DEBUG('u', "Minimum %d", minThread->GetPID());
 
         return (Thread *)readyList->Remove();
-        // el
+
         // DELETE THE ELEMENT
         ptr = scheduler->readyList->first;
-        if(ptr == scheduler->readyList->last){
-            scheduler->readyList->last == NULL;
-            scheduler->readyList->first == NULL;
-        } else {
-            if (ptr == minPtr) {
-                scheduler->readyList->first = ptr->next;
-            }
+        if (ptr == minPtr) {
+            scheduler->readyList->first = ptr->next;
+        }
 
-            ListElement *prev = ptr;
-            ptr = ptr->next;
-            while(ptr!=NULL) {
-                if(ptr == minPtr) {
-                    prev->next = ptr->next;
-                    if(ptr == scheduler->readyList->last) {
-                        scheduler->readyList->last = prev;
-                    }
-                }
-                ptr = ptr->next;
+        ListElement *prev = ptr;
+        ptr = ptr->next;
+        while(ptr!=NULL) {
+            if(ptr == minPtr) {
+                prev->next = ptr->next;
             }
+            prev = ptr;
+            ptr = ptr->next;
         }
 
         delete minPtr;
         return minThread;
+
     } else {
         int key;
         return (Thread *)readyList->SortedRemove(&key); 
