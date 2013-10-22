@@ -68,6 +68,8 @@ extern void Cleanup();
 static void
 TimerInterruptHandler(int dummy)
 {
+    DEBUG('T', "SLeep check timer triggered at %d", stats->totalTicks);
+
     TimeSortedWaitQueue *ptr;
     if (interrupt->getStatus() != IdleMode) {
         // Check the head of the sleep queue
@@ -78,7 +80,6 @@ TimerInterruptHandler(int dummy)
            delete ptr;
         }
         //printf("[%d] Timer interrupt.\n", stats->totalTicks);
-        interrupt->YieldOnReturn();
     }
 } 
 
@@ -160,7 +161,7 @@ Initialize(int argc, char **argv)
     interrupt = new Interrupt;			// start up interrupt handling
     scheduler = new Scheduler();		// initialize the ready queue
     // if (randomYield)				// start the timer (if needed)
-       //timer = new Timer(TimerInterruptHandler, 0, randomYield);
+       //timer = new Timer(TimerInterruptHandler, 0, randomYield, 100);
 
     threadToBeDestroyed = NULL;
 

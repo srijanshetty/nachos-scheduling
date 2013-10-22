@@ -36,9 +36,8 @@ Timer *timer; // The hardware timer to be used
 static void
 PreemptHandler(int dummy)
 {
-    DEBUG('t', "Timer Interrupt at %d", stats->totalTicks);
+    DEBUG('T', "\nTimer Interrupt at %d\n", stats->totalTicks);
 
-    // The default NachOS implementation
     TimeSortedWaitQueue *ptr;
     if (interrupt->getStatus() != IdleMode) {
         // Check the head of the sleep queue
@@ -49,6 +48,10 @@ PreemptHandler(int dummy)
            delete ptr;
         }
         //printf("[%d] Timer interrupt.\n", stats->totalTicks);
+    }
+
+    // Preempt only for the algorithms greater than 3
+    if(scheduler->scheduler_type >=3) {
         interrupt->YieldOnReturn();
     }
 } 
@@ -99,7 +102,6 @@ StartProcess(char *filename)
     // by doing the syscall "exit"
 }
 
-
 //----------------------------------------------------------------------
 // RunBatchProcess 
 // Run a batch of processes
@@ -137,37 +139,6 @@ RunBatchProcess(char *filename) {
     name[k]='\0';
     k=0; ++i;
     scheduler->scheduler_type = atoi(name);
-    bool randomYield = FALSE;
-
-    // Set the quantum according to the scheduler type
-    switch(scheduler->scheduler_type) {
-        case 3:
-                timer = new Timer(PreemptHandler, 0, randomYield, 120);
-                break;
-        case 4: 
-                timer = new Timer(PreemptHandler, 0, randomYield, 60);
-                break;
-        case 5: 
-                timer = new Timer(PreemptHandler, 0, randomYield, 30);
-                break;
-        case 6: 
-                timer = new Timer(PreemptHandler, 0, randomYield, 3000);
-                break;
-        case 7: 
-                timer = new Timer(PreemptHandler, 0, randomYield, 120);
-                break;
-        case 8: 
-                timer = new Timer(PreemptHandler, 0, randomYield, 60);
-                break;
-        case 9: 
-                timer = new Timer(PreemptHandler, 0, randomYield, 30);
-                break;
-        case 10: 
-                timer = new Timer(PreemptHandler, 0, randomYield, 3000);
-                break;
-        default: 
-                break;
-    }
 
     DEBUG('s', "Scheduling algorithm is \"%d\"\n", scheduler->scheduler_type);
 
@@ -217,6 +188,45 @@ RunBatchProcess(char *filename) {
             }
         }
     }
+
+    // Setting up the hardware timer
+    bool randomYield = FALSE;
+    int quantum;
+    switch(scheduler->scheduler_type) {
+        case 1: 
+        case 2:
+                quantum = 100;
+                break;
+        case 3:
+                quantum = 120;
+                break;
+        case 4: 
+                quantum = 60;
+                break;
+        case 5: 
+                quantum = 30;
+                break;
+        case 6: 
+                quantum = 3000;
+                break;
+        case 7: 
+                quantum = 120;
+                break;
+        case 8: 
+                quantum = 60;
+                break;
+        case 9: 
+                quantum = 30;
+                break;
+        case 10: 
+                quantum = 3000;
+                break;
+        default: 
+                break;
+    }
+
+    // Set up the timer Interrupt
+    timer = new Timer(PreemptHandler, 0, randomYield, quantum);
 
     // The main thread exits after this
     currentThread->Exit(false, 0);
