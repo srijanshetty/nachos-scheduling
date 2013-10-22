@@ -222,7 +222,6 @@ Scheduler::Run (Thread *nextThread)
     }
 
     // Reset the quantum of the oldThread
-    oldThread->tickCount = 0;
     oldThread->total_time += stats->totalTicks - oldThread->start_time;
 
     currentThread = nextThread;		    // switch to the next thread

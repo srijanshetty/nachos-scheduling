@@ -14,6 +14,45 @@
 #include "addrspace.h"
 #include "synch.h"
 
+Timer *timer; // The hardware timer to be used
+
+//----------------------------------------------------------------------
+// PreemptHandler
+// 	Interrupt handler for the timer device.  The timer device is
+//	set up to interrupt the CPU periodically (once every TimerTicks).
+//	This routine is called each time there is a timer interrupt,
+//	with interrupts disabled.
+//
+//	Note that instead of calling Yield() directly (which would
+//	suspend the interrupt handler, not the interrupted thread
+//	which is what we wanted to context switch), we set a flag
+//	so that once the interrupt handler is done, it will appear as 
+//	if the interrupted thread called Yield at the point it is 
+//	was interrupted.
+//
+//	"dummy" is because every interrupt handler takes one argument,
+//		whether it needs it or not.
+//----------------------------------------------------------------------
+static void
+PreemptHandler(int dummy)
+{
+    DEBUG('t', "Timer Interrupt at %d", stats->totalTicks);
+
+    // The default NachOS implementation
+    TimeSortedWaitQueue *ptr;
+    if (interrupt->getStatus() != IdleMode) {
+        // Check the head of the sleep queue
+        while ((sleepQueueHead != NULL) && (sleepQueueHead->GetWhen() <= (unsigned)stats->totalTicks)) {
+           sleepQueueHead->GetThread()->Schedule();
+           ptr = sleepQueueHead;
+           sleepQueueHead = sleepQueueHead->GetNext();
+           delete ptr;
+        }
+        //printf("[%d] Timer interrupt.\n", stats->totalTicks);
+        interrupt->YieldOnReturn();
+    }
+} 
+
 //----------------------------------------------------------------------
 // RunBatchProcess 
 // The function run when a batch thread gets scheduled for the very first time
@@ -98,24 +137,33 @@ RunBatchProcess(char *filename) {
     name[k]='\0';
     k=0; ++i;
     scheduler->scheduler_type = atoi(name);
+    bool randomYield = FALSE;
 
     // Set the quantum according to the scheduler type
     switch(scheduler->scheduler_type) {
-        case 3: scheduler->quantum = 2800;
+        case 3:
+                timer = new Timer(PreemptHandler, 0, randomYield, 120);
                 break;
-        case 4: scheduler->quantum = 1400;
+        case 4: 
+                timer = new Timer(PreemptHandler, 0, randomYield, 60);
                 break;
-        case 5: scheduler->quantum = 700;
+        case 5: 
+                timer = new Timer(PreemptHandler, 0, randomYield, 30);
                 break;
-        case 6: scheduler->quantum = 500;
+        case 6: 
+                timer = new Timer(PreemptHandler, 0, randomYield, 3000);
                 break;
-        case 7: scheduler->quantum = 2800;
+        case 7: 
+                timer = new Timer(PreemptHandler, 0, randomYield, 120);
                 break;
-        case 8: scheduler->quantum = 1400;
+        case 8: 
+                timer = new Timer(PreemptHandler, 0, randomYield, 60);
                 break;
-        case 9: scheduler->quantum = 500;
+        case 9: 
+                timer = new Timer(PreemptHandler, 0, randomYield, 30);
                 break;
-        case 10: scheduler->quantum = 800;
+        case 10: 
+                timer = new Timer(PreemptHandler, 0, randomYield, 3000);
                 break;
         default: 
                 break;

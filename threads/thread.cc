@@ -57,7 +57,6 @@ Thread::Thread(char* threadName)
     cpu_burst_estimate = 200.0;
     wait_time = 0;
     wait_time_start = 0;
-    tickCount = 0;
     block_time = 0;
     block_start = 0;
     timerYield = false;
@@ -113,7 +112,6 @@ Thread::Thread(char* threadName, int newPriority, bool orphan)
     cpu_burst_estimate = 200.0;
     wait_time = 0;
     wait_time_start = 0;
-    tickCount = 0;
     block_time = 0;
     block_start = 0;
     timerYield = false;

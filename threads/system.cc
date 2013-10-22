@@ -16,7 +16,7 @@ Thread *threadToBeDestroyed;  		// the thread that just finished
 Scheduler *scheduler;			// the ready list
 Interrupt *interrupt;			// interrupt status
 Statistics *stats;			// performance metrics
-Timer *timer;				// the hardware timer device,
+extern Timer *timer;				// the hardware timer device,
 					// for invoking context switches
 
 unsigned numPagesAllocated;              // number of physical frames allocated
@@ -48,7 +48,6 @@ PostOffice *postOffice;
 // External definition, to allow us to take a pointer to this function
 extern void Cleanup();
 
-
 //----------------------------------------------------------------------
 // TimerInterruptHandler
 // 	Interrupt handler for the timer device.  The timer device is
@@ -69,37 +68,17 @@ extern void Cleanup();
 static void
 TimerInterruptHandler(int dummy)
 {
-    if (scheduler->scheduler_type == 0) {
-        // The default NachOS implementation
-        TimeSortedWaitQueue *ptr;
-        if (interrupt->getStatus() != IdleMode) {
-            // Check the head of the sleep queue
-            while ((sleepQueueHead != NULL) && (sleepQueueHead->GetWhen() <= (unsigned)stats->totalTicks)) {
-               sleepQueueHead->GetThread()->Schedule();
-               ptr = sleepQueueHead;
-               sleepQueueHead = sleepQueueHead->GetNext();
-               delete ptr;
-            }
-            //printf("[%d] Timer interrupt.\n", stats->totalTicks);
-            interrupt->YieldOnReturn();
+    TimeSortedWaitQueue *ptr;
+    if (interrupt->getStatus() != IdleMode) {
+        // Check the head of the sleep queue
+        while ((sleepQueueHead != NULL) && (sleepQueueHead->GetWhen() <= (unsigned)stats->totalTicks)) {
+           sleepQueueHead->GetThread()->Schedule();
+           ptr = sleepQueueHead;
+           sleepQueueHead = sleepQueueHead->GetNext();
+           delete ptr;
         }
-    } else if(scheduler->scheduler_type == 1 || scheduler->scheduler_type == 2) {
-        // Non preemptive scheduling
-        return;
-    } 
-
-    // QUANTUM BASED SCHEDULING
-    currentThread->tickCount++;
-    DEBUG('s', "\n[ pid %d ] TickCount %d time %d\n", 
-            currentThread->GetPID(), currentThread->tickCount, stats->totalTicks);
-    if(currentThread->tickCount == scheduler->quantum/100) {
-        DEBUG('s', "Qunatum expired for thread %d\n", currentThread->GetPID());
-        currentThread->tickCount = 0;
-
-        // Yield this thread now
-        currentThread->timerYield = true;
+        //printf("[%d] Timer interrupt.\n", stats->totalTicks);
         interrupt->YieldOnReturn();
-        return;
     }
 } 
 
@@ -181,7 +160,7 @@ Initialize(int argc, char **argv)
     interrupt = new Interrupt;			// start up interrupt handling
     scheduler = new Scheduler();		// initialize the ready queue
     // if (randomYield)				// start the timer (if needed)
-       timer = new Timer(TimerInterruptHandler, 0, randomYield);
+       //timer = new Timer(TimerInterruptHandler, 0, randomYield);
 
     threadToBeDestroyed = NULL;
 
