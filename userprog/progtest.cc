@@ -221,7 +221,7 @@ RunBatchProcess(char *filename) {
                 quantum = 30;
                 break;
         case 10: 
-                quantum = 3000;
+                quantum = 20;
                 break;
         default: 
                 break;

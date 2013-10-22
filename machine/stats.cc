@@ -62,14 +62,14 @@ Statistics::Print()
     printf("Variance of Thread completion time %f\n", var_thread);
     printf("Average wait time %f\n", avg_wait);
 
-    printf("\nCPU bursts\n");
+    printf("\nCPU Usage Statistics\n");
     printf("Max CPU Burst %d\n", max_cpu);
     printf("Min CPU Burst %d\n", min_cpu);
     printf("CPU Burst count %d\n", burst_count);
     printf("Total CPU Burst time %d\n", total_cpu);
     printf("Utilization: %f\n", util);
 
-    printf("\n\nTotal simulation time %d", totalTicks);
+    printf("\nTotal simulation time %d\n", totalTicks);
 
     printf("Disk I/O: reads %d, writes %d\n", numDiskReads, numDiskWrites);
     printf("Console I/O: reads %d, writes %d\n", numConsoleCharsRead, 
