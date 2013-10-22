@@ -244,7 +244,7 @@ Interrupt::Halt()
    currentThread->total_time += stats->totalTicks - currentThread->start_time;
    currentThread->block_time += stats->totalTicks - currentThread->block_start;
 
-   DEBUG('s' , "\nThread \"%d\" cpu %d wait %d block %d\n", 
+   DEBUG('s' , "\nThread %d cpu %d wait %d block %d\n", 
            currentThread->GetPID(),
            currentThread->cpu_time, currentThread->wait_time, 
            currentThread->block_time);

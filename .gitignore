@@ -33,5 +33,4 @@ test/forkjoin_hard
 test/testloop*
 userprog/batch*
 userprog/temp
-userprog/test.sh
 test/testburst.c

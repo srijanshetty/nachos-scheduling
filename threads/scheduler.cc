@@ -30,7 +30,6 @@
 Scheduler::Scheduler()
 { 
     readyList = new List; 
-    threadPriorityList = new List;
 
     // SHORTEST JOB FIRST
     alpha = 0.5;
@@ -73,7 +72,7 @@ Scheduler::ReadyToRun (Thread *thread)
     thread->wait_time_start = stats->totalTicks;
 
     // For SJF
-    if(scheduler_type == 2) {
+    if(scheduler_type == 2 && thread->cpu_burst_previous >0 ){
         //Compute the burst of the thread and then sorted insert
         double estimate = alpha*thread->cpu_burst_previous 
                         + ( 1- alpha )*thread->cpu_burst_estimate;
@@ -108,9 +107,8 @@ Scheduler::FindNextToRun ()
     if(scheduler_type == 0 || scheduler_type == 1) {
         return (Thread *)readyList->Remove();
     } else if ( scheduler_type >= 7 && scheduler_type <=10 ) {
-
-        // First find the minimum element
-        ListElement *minPtr = scheduler->readyList->first;
+        // Find the minimum
+        ListElement *minPtr = readyList->first;
         if(minPtr == NULL) {
             return NULL;
         }
@@ -132,20 +130,19 @@ Scheduler::FindNextToRun ()
         }
 
         Thread *tempThread1;
-        DEBUG('u', "\nListing Threads\n");
+        DEBUG('U', "\nNext to run called by %d at %d\n", currentThread->GetPID(), stats->totalTicks);
         for(ListElement *ptr1 = scheduler->readyList->first; ptr1!=NULL; ptr1=ptr1->next) {
             tempThread1 = (Thread *)ptr1->item;
-            DEBUG('u', "Thread %d Priority %d\n", tempThread1->GetPID(), tempThread1->priority);
+            DEBUG('U', "Thread %d Priority %d\n", tempThread1->GetPID(), tempThread1->priority);
         }
 
-        DEBUG('u', "Minimum %d", minThread->GetPID());
-
-        return (Thread *)readyList->Remove();
+        DEBUG('U', "Minimum %d\n\n", minThread->GetPID());
 
         // DELETE THE ELEMENT
-        ptr = scheduler->readyList->first;
+        ptr = readyList->first;
         if (ptr == minPtr) {
-            scheduler->readyList->first = ptr->next;
+            // corner case of the first thread
+            return (Thread *)readyList->Remove();
         }
 
         ListElement *prev = ptr;
@@ -153,6 +150,11 @@ Scheduler::FindNextToRun ()
         while(ptr!=NULL) {
             if(ptr == minPtr) {
                 prev->next = ptr->next;
+
+                // Corner case of the last threadreadyList->
+                if (ptr == readyList->last) {
+                    readyList->last = prev;
+                }
             }
             prev = ptr;
             ptr = ptr->next;
@@ -197,30 +199,29 @@ Scheduler::Run (Thread *nextThread)
 					    // had an undetected stack overflow
                         
     // FOR UNIX SCHEDULING
-    if (scheduler_type >= 7 && scheduler_type <= 10) {
-        int i, pid = oldThread->GetPID();
+    if(oldThread->cpu_burst_previous > 0) {
+        if (scheduler_type >= 7 && scheduler_type <= 10) {
+            int i, pid = oldThread->GetPID();
 
-        // Update the cpu_count
-        cpu_count[pid] += oldThread->cpu_burst_previous;
+            DEBUG('U', "\nUpdate initiated by %d time %d burst %d\n",
+                    currentThread->GetPID(), stats->totalTicks,
+                    currentThread->cpu_burst_previous);
 
-        // Half all the cpu_counts and update the priorities of all threads
-        for(i=0; i<MAX_THREAD_COUNT; ++i) {
-            cpu_count[i] = cpu_count[i]/2;
-        }
+            // Update the cpu_count
+            cpu_count[pid] += oldThread->cpu_burst_previous;
 
-        // Now update the priorities of the threads
-        Thread *tempThread;
-        DEBUG('u', "\nUpdate initaited by thread %d with burst %d\n", 
-                oldThread->GetPID(), oldThread->cpu_burst_previous);
-        for(ListElement *ptr = threadPriorityList->first; ptr!=NULL; ptr=ptr->next) {
-            tempThread = (Thread *)ptr->item;
-            tempThread->priority += cpu_count[tempThread->GetPID()]/2;
-            DEBUG('u', "Priority %d Thread %d\n", tempThread->priority, tempThread->GetPID());
+            // Half all the cpu_counts and update the priorities of all threads
+            for(i=0; i<MAX_THREAD_COUNT; ++i) {
+                cpu_count[i] = cpu_count[i]/2;
+                if(threadArray[i] != NULL) {
+                    threadArray[i]->priority += cpu_count[i]/2;
+                    DEBUG('U', "Thread %i Priority %d\n", i, threadArray[i]->priority);
+                }
+            }
         }
     }
 
     // Reset the quantum of the oldThread
-    oldThread->tickCount = 0;
     oldThread->total_time += stats->totalTicks - oldThread->start_time;
 
     currentThread = nextThread;		    // switch to the next thread
