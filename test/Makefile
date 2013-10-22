@@ -37,7 +37,7 @@ CPP = /usr/bin/cpp
 INCDIR =-I../userprog -I../threads
 CFLAGS = -G 0 -c $(INCDIR)
 
-all: halt shell matmult sort printtest vectorsum testregPA forkjoin testexec testyield testloop forkjoin_hard testloop1 testloop2 testloop3
+all: halt shell matmult sort printtest vectorsum testregPA forkjoin testexec testyield testloop forkjoin_hard testloop1 testloop2 testloop3 testloop4 testloop5
 
 start.o: start.s ../userprog/syscall.h
 	$(CPP) $(CPPFLAGS) start.s > strt.s
@@ -168,5 +168,21 @@ testloop3: testloop3.o start.o
 	$(LD) $(LDFLAGS) start.o testloop3.o -o testloop3.coff
 	../bin/coff2noff testloop3.coff testloop3
 
+testloop4.o: testloop4.c
+	$(CC) $(INCDIR) -S testloop4.c -o testloop4.s
+	$(AS) $(CFLAGS) testloop4.s -o testloop4.o
+	rm -f testloop4.s
+testloop4: testloop4.o start.o
+	$(LD) $(LDFLAGS) start.o testloop4.o -o testloop4.coff
+	../bin/coff2noff testloop4.coff testloop4
+
+testloop5.o: testloop5.c
+	$(CC) $(INCDIR) -S testloop5.c -o testloop5.s
+	$(AS) $(CFLAGS) testloop5.s -o testloop5.o
+	rm -f testloop5.s
+testloop5: testloop5.o start.o
+	$(LD) $(LDFLAGS) start.o testloop5.o -o testloop5.coff
+	../bin/coff2noff testloop5.coff testloop5
+
 clean:
-	rm -f start.o halt.o halt shell.o shell sort.o sort matmult.o matmult halt.coff shell.coff sort.coff matmult.coff printtest.o printtest printtest.coff vectorsum.o vectorsum.coff vectorsum testregPA.o testregPA.coff testregPA forkjoin.o forkjoin.coff forkjoin testexec.o testexec.coff testexec testyield.o testyield.coff testyield testloop.o testloop.coff testloop forkjoin_hard.o forkjoin_hard.s forkjoin_hard testloop1.o testloop1.coff testloop1 testloop2.o testloop2.coff testloop2 testloop3.o testloop3.coff testloop3
+	rm -f start.o halt.o halt shell.o shell sort.o sort matmult.o matmult halt.coff shell.coff sort.coff matmult.coff printtest.o printtest printtest.coff vectorsum.o vectorsum.coff vectorsum testregPA.o testregPA.coff testregPA forkjoin.o forkjoin.coff forkjoin testexec.o testexec.coff testexec testyield.o testyield.coff testyield testloop.o testloop.coff testloop forkjoin_hard.o forkjoin_hard.s forkjoin_hard testloop1.o testloop1.coff testloop1 testloop2.o testloop2.coff testloop2 testloop3.o testloop3.coff testloop3 testloop4.o testloop4 testloop4.coff testloop5.o testloop5 testloop5.coff

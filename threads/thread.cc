@@ -305,6 +305,7 @@ Thread::Exit (bool terminateSim, int exitcode)
     // Update the information in the threadArray
     threadArray[currentThread->GetPID()] = NULL;
 
+    // BURST_STAT_UPDATE
     // Update the information about the currentThread, with is the currentThread right now
     currentThread->cpu_burst_previous = stats->totalTicks - currentThread->cpu_burst_start;
     currentThread->cpu_time += currentThread->cpu_burst_previous;
@@ -312,6 +313,49 @@ Thread::Exit (bool terminateSim, int exitcode)
     DEBUG('s', "\n[ pid %d ] start time %d, current time %d, CPU burst time %d\n", 
             currentThread->GetPID(), currentThread->cpu_burst_start, 
             stats->totalTicks, currentThread->cpu_burst_previous);
+
+    if(currentThread->GetPID() > 0) {
+        if(currentThread->cpu_burst_previous > 0) { 
+            // For counting the number of burst
+            DEBUG('S', "\nBURST_STAT_UPDATE");
+            stats->total_cpu += currentThread->cpu_burst_previous;
+            stats->burst_count++;
+
+            // Check for maximum
+            if(currentThread->cpu_burst_previous > stats->max_cpu) {
+                stats->max_cpu = currentThread->cpu_burst_previous;
+            }
+
+            //Check for minimum
+            if(currentThread->cpu_burst_previous < stats->min_cpu) {
+                stats->min_cpu = currentThread->cpu_burst_previous;
+            }
+        }
+    }
+
+    // UNIX_SCHEDULING
+    // Increment the priorities of the threads
+    if(currentThread->cpu_burst_previous > 0) {
+        if (scheduler->scheduler_type >= 7 && scheduler->scheduler_type <= 10) {
+            int i, pid = currentThread->GetPID();
+
+            DEBUG('U', "\nUpdate initiated by %d time %d burst %d\n",
+                    currentThread->GetPID(), stats->totalTicks,
+                    currentThread->cpu_burst_previous);
+
+            // Update the cpu_count
+            scheduler->cpu_count[pid] += currentThread->cpu_burst_previous;
+
+            // Half all the cpu_counts and update the priorities of all threads
+            for(i=0; i<MAX_THREAD_COUNT; ++i) {
+                scheduler->cpu_count[i] = scheduler->cpu_count[i]/2;
+                if(threadArray[i] != NULL) {
+                    threadArray[i]->priority += scheduler->cpu_count[i]/2;
+                    DEBUG('U', "Thread %i Priority %d\n", i, threadArray[i]->priority);
+                }
+            }
+        }
+    }
 
     status = BLOCKED;
 
@@ -344,10 +388,30 @@ Thread::Exit (bool terminateSim, int exitcode)
     // Printing the statistics of this thread as this is about to exit
     currentThread->block_time += stats->totalTicks - currentThread->block_start;
     currentThread->total_time += stats->totalTicks - currentThread->start_time;
-    DEBUG('s' , "\nThread %d cpu %d wait %d block %d\n", 
+    DEBUG('s' , "\nThread %d total %d cpu %d wait %d block %d\n", 
             currentThread->GetPID(),
+            currentThread->total_time,
             currentThread->cpu_time, currentThread->wait_time, 
             currentThread->block_time);
+
+    // FINAL_STAT_UPDATE
+    // Update the thread statistics
+    if(currentThread->GetPID() > 0 ){
+        DEBUG('s', "\nFINAL_STAT_UPDATE");
+        stats->thread_count++;
+        stats->total_wait += currentThread->wait_time;
+        stats->total_thread += currentThread->total_time;
+        
+        // maxmimum value of thread completion
+        if(stats->max_thread < currentThread->total_time) {
+            stats->max_thread = currentThread->total_time;
+        }
+
+        // minumum value of thread completion
+        if(currentThread->total_time < stats->min_thread ) {
+            stats->min_thread = currentThread->total_time;
+        }
+    }
 
     scheduler->Run(nextThread); // returns when we've been signalled
 }
@@ -379,7 +443,59 @@ Thread::Yield ()
     ASSERT(this == currentThread);
     
     DEBUG('t', "Yielding thread \"%d\"\n", pid);
-    
+
+    // BURST_STAT_UPDATE
+    // Update the information about the currentThread, with is the currentThread right now
+    currentThread->cpu_burst_previous = stats->totalTicks - currentThread->cpu_burst_start;
+    currentThread->cpu_time += currentThread->cpu_burst_previous;
+
+    DEBUG('s', "\n[ pid %d ] start time %d, current time %d, CPU burst time %d\n", 
+            currentThread->GetPID(), currentThread->cpu_burst_start, 
+            stats->totalTicks, currentThread->cpu_burst_previous);
+
+    if(currentThread->GetPID() > 0) {
+        if(currentThread->cpu_burst_previous > 0) { 
+            DEBUG('s', "BURST_STAT_UPDATE");
+            // For counting the number of burst
+            stats->total_cpu += currentThread->cpu_burst_previous;
+            stats->burst_count++;
+
+            // Check for maximum
+            if(currentThread->cpu_burst_previous > stats->max_cpu) {
+                stats->max_cpu = currentThread->cpu_burst_previous;
+            }
+
+            //Check for minimum
+            if(currentThread->cpu_burst_previous < stats->min_cpu) {
+                stats->min_cpu = currentThread->cpu_burst_previous;
+            }
+        }
+    }
+
+    // UNIX_SCHEDULING
+    // increment the priority of all threads
+    if(currentThread->cpu_burst_previous > 0) {
+        if (scheduler->scheduler_type >= 7 && scheduler->scheduler_type <= 10) {
+            int i, pid = currentThread->GetPID();
+
+            DEBUG('U', "\nUpdate initiated by %d time %d burst %d\n",
+                    currentThread->GetPID(), stats->totalTicks,
+                    currentThread->cpu_burst_previous);
+
+            // Update the cpu_count
+            scheduler->cpu_count[pid] += currentThread->cpu_burst_previous;
+
+            // Half all the cpu_counts and update the priorities of all threads
+            for(i=0; i<MAX_THREAD_COUNT; ++i) {
+                scheduler->cpu_count[i] = scheduler->cpu_count[i]/2;
+                if(threadArray[i] != NULL) {
+                    threadArray[i]->priority += scheduler->cpu_count[i]/2;
+                    DEBUG('U', "Thread %i Priority %d\n", i, threadArray[i]->priority);
+                }
+            }
+        }
+    }
+
     // If it is a timerYield then we add this thread to the ready list first and
     // then compute the next thread
     if(timerYield) {
@@ -388,14 +504,6 @@ Thread::Yield ()
     nextThread = scheduler->FindNextToRun();
 
     if (nextThread != NULL) {
-        // Update the information about the currentThread, with is the currentThread right now
-        currentThread->cpu_burst_previous = stats->totalTicks - currentThread->cpu_burst_start;
-        currentThread->cpu_time += currentThread->cpu_burst_previous;
-
-        DEBUG('s', "\n[ pid %d ] start time %d, current time %d, CPU burst time %d\n", 
-                currentThread->GetPID(), currentThread->cpu_burst_start, 
-                stats->totalTicks, currentThread->cpu_burst_previous);
-
         if(!timerYield) {
             scheduler->ReadyToRun(this);
             timerYield = false;
@@ -434,6 +542,7 @@ Thread::Sleep ()
     
     DEBUG('t', "Sleeping thread \"%d\"\n", GetPID());
 
+    // BURST_STAT_UPDATE
     // Update the information about the currentThread, with is the currentThread right now
     currentThread->cpu_burst_previous = stats->totalTicks - currentThread->cpu_burst_start;
     currentThread->cpu_time += currentThread->cpu_burst_previous;
@@ -441,6 +550,49 @@ Thread::Sleep ()
     DEBUG('s', "\n[ pid %d ] start time %d, current time %d, CPU burst time %d\n", 
             currentThread->GetPID(), currentThread->cpu_burst_start, 
             stats->totalTicks, currentThread->cpu_burst_previous);
+
+    if(currentThread->GetPID() > 0) {
+        if(currentThread->cpu_burst_previous > 0) { 
+            DEBUG('s', "BURST_STAT_UPDATE");
+            // For counting the number of burst
+            stats->total_cpu += currentThread->cpu_burst_previous;
+            stats->burst_count++;
+
+            // Check for maximum
+            if(currentThread->cpu_burst_previous > stats->max_cpu) {
+                stats->max_cpu = currentThread->cpu_burst_previous;
+            }
+
+            //Check for minimum
+            if(currentThread->cpu_burst_previous < stats->min_cpu) {
+                stats->min_cpu = currentThread->cpu_burst_previous;
+            }
+        }
+    }
+
+    // UNIX_SCHEDULING
+    // increment the priority of all threads
+    if(currentThread->cpu_burst_previous > 0) {
+        if (scheduler->scheduler_type >= 7 && scheduler->scheduler_type <= 10) {
+            int i, pid = currentThread->GetPID();
+
+            DEBUG('U', "\nUpdate initiated by %d time %d burst %d\n",
+                    currentThread->GetPID(), stats->totalTicks,
+                    currentThread->cpu_burst_previous);
+
+            // Update the cpu_count
+            scheduler->cpu_count[pid] += currentThread->cpu_burst_previous;
+
+            // Half all the cpu_counts and update the priorities of all threads
+            for(i=0; i<MAX_THREAD_COUNT; ++i) {
+                scheduler->cpu_count[i] = scheduler->cpu_count[i]/2;
+                if(threadArray[i] != NULL) {
+                    threadArray[i]->priority += scheduler->cpu_count[i]/2;
+                    DEBUG('U', "Thread %i Priority %d\n", i, threadArray[i]->priority);
+                }
+            }
+        }
+    }
 
     status = BLOCKED;
 

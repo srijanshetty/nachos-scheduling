@@ -12,6 +12,7 @@
 #define STATS_H
 
 #include "copyright.h"
+#define MAX_THREAD_TIME 1000000
 
 // The following class defines the statistics that are to be kept
 // about Nachos behavior -- how much time (ticks) elapsed, how
@@ -35,6 +36,19 @@ class Statistics {
     int numPageFaults;		// number of virtual memory page faults
     int numPacketsSent;		// number of packets sent over the network
     int numPacketsRecvd;	// number of packets received over the network
+    int total_cpu;
+    int max_cpu;
+    int min_cpu;
+    int burst_count;
+    int total_wait;
+    int max_thread;
+    int min_thread;
+    int thread_count;
+    int total_thread;
+    double util;
+    double avg_wait;
+    double avg_thread;
+    double var_thread;
 
     Statistics(); 		// initialize everything to zero
 

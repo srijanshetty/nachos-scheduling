@@ -96,6 +96,9 @@ StartProcess(char *filename)
     // This is when this thread gets started for the first time
     currentThread->start_time = stats->totalTicks;
 
+    // Start the timer
+    timer = new Timer(PreemptHandler, 0, false , 100);
+
     machine->Run();			// jump to the user progam
     ASSERT(FALSE);			// machine->Run never returns;
     // the address space exits
@@ -190,7 +193,6 @@ RunBatchProcess(char *filename) {
     }
 
     // Setting up the hardware timer
-    bool randomYield = FALSE;
     int quantum;
     switch(scheduler->scheduler_type) {
         case 1: 
@@ -207,7 +209,7 @@ RunBatchProcess(char *filename) {
                 quantum = 30;
                 break;
         case 6: 
-                quantum = 3000;
+                quantum = 20;
                 break;
         case 7: 
                 quantum = 120;
@@ -226,7 +228,7 @@ RunBatchProcess(char *filename) {
     }
 
     // Set up the timer Interrupt
-    timer = new Timer(PreemptHandler, 0, randomYield, quantum);
+    timer = new Timer(PreemptHandler, 0, false, quantum);
 
     // The main thread exits after this
     currentThread->Exit(false, 0);

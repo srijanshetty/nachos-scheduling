@@ -244,12 +244,32 @@ Interrupt::Halt()
    currentThread->total_time += stats->totalTicks - currentThread->start_time;
    currentThread->block_time += stats->totalTicks - currentThread->block_start;
 
-   DEBUG('s' , "\nThread %d cpu %d wait %d block %d\n", 
+    DEBUG('s' , "\nThread %d total %d cpu %d wait %d block %d\n", 
            currentThread->GetPID(),
+           currentThread->total_time,
            currentThread->cpu_time, currentThread->wait_time, 
            currentThread->block_time);
 
     printf("Machine halting!\n\n");
+
+    // Update the thread statistics
+    if(currentThread->GetPID() != 0 ){
+        DEBUG('s', "FINAL_STAT_UPDATE");
+        stats->thread_count++;
+        stats->total_wait += currentThread->wait_time;
+        stats->total_thread += currentThread->total_time;
+        
+        // maxmimum value of thread completion
+        if(stats->max_thread < currentThread->total_time) {
+            stats->max_thread = currentThread->total_time;
+        }
+
+        // minumum value of thread completion
+        if(currentThread->total_time < stats->min_thread ) {
+            stats->min_thread = currentThread->total_time;
+        }
+    }
+
     stats->Print();
     Cleanup();     // Never returns.
 }

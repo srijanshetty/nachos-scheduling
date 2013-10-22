@@ -136,7 +136,7 @@ Scheduler::FindNextToRun ()
             DEBUG('U', "Thread %d Priority %d\n", tempThread1->GetPID(), tempThread1->priority);
         }
 
-        DEBUG('U', "Minimum %d\n\n", minThread->GetPID());
+        DEBUG('U', "Minimum %d\n", minThread->GetPID());
 
         // DELETE THE ELEMENT
         ptr = readyList->first;
@@ -198,29 +198,6 @@ Scheduler::Run (Thread *nextThread)
     oldThread->CheckOverflow();		    // check if the old thread
 					    // had an undetected stack overflow
                         
-    // FOR UNIX SCHEDULING
-    if(oldThread->cpu_burst_previous > 0) {
-        if (scheduler_type >= 7 && scheduler_type <= 10) {
-            int i, pid = oldThread->GetPID();
-
-            DEBUG('U', "\nUpdate initiated by %d time %d burst %d\n",
-                    currentThread->GetPID(), stats->totalTicks,
-                    currentThread->cpu_burst_previous);
-
-            // Update the cpu_count
-            cpu_count[pid] += oldThread->cpu_burst_previous;
-
-            // Half all the cpu_counts and update the priorities of all threads
-            for(i=0; i<MAX_THREAD_COUNT; ++i) {
-                cpu_count[i] = cpu_count[i]/2;
-                if(threadArray[i] != NULL) {
-                    threadArray[i]->priority += cpu_count[i]/2;
-                    DEBUG('U', "Thread %i Priority %d\n", i, threadArray[i]->priority);
-                }
-            }
-        }
-    }
-
     // Reset the quantum of the oldThread
     oldThread->total_time += stats->totalTicks - oldThread->start_time;
 
