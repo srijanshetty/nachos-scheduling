@@ -401,6 +401,9 @@ Thread::Exit (bool terminateSim, int exitcode)
         stats->thread_count++;
         stats->total_wait += currentThread->wait_time;
         stats->total_thread += currentThread->total_time;
+        int completion_time = stats->totalTicks;
+        DEBUG('C', "Completion time %d\n", completion_time);
+        stats->total_completion += completion_time;
         
         // maxmimum value of thread completion
         if(stats->max_thread < currentThread->total_time) {
@@ -410,6 +413,15 @@ Thread::Exit (bool terminateSim, int exitcode)
         // minumum value of thread completion
         if(currentThread->total_time < stats->min_thread ) {
             stats->min_thread = currentThread->total_time;
+        }
+
+        // The maximum and minimum completion
+        if(completion_time > stats->max_completion) {
+            stats->max_completion = completion_time;
+        }
+
+        if(completion_time < stats->min_completion) {
+            stats->min_completion = completion_time;
         }
     }
 

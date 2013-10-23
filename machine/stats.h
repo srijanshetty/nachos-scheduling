@@ -49,6 +49,9 @@ class Statistics {
     double avg_wait;
     double avg_thread;
     double var_thread;
+    int total_completion;
+    int max_completion;
+    int min_completion;
 
     Statistics(); 		// initialize everything to zero
 

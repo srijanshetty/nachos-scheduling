@@ -35,6 +35,9 @@ Statistics::Statistics()
     avg_thread = 0.0;
     var_thread = 0.0;
     thread_count = 0;
+    total_completion = 0;
+    max_completion = 0;
+    min_completion = MAX_THREAD_TIME;
 }
 
 //----------------------------------------------------------------------
@@ -54,11 +57,16 @@ Statistics::Print()
     printf("Ticks: total %d idle %d system %d user %d util %f\n", totalTicks, 
 	idleTicks, systemTicks, userTicks, util);
 
-    printf("\n\nThread Statistics\n");
+    printf("\n\nCompletion statistics\n");
+    printf("Total Completion time %d\n", total_completion);
+    printf("Maximum Completion time %d\n", max_completion);
+    printf("Minimum Completion time %d\n", min_completion);
+
+    printf("\nThread Statistics\n");
     printf("Thread Count %d\n", thread_count);
-    printf("Max Thread Completion time %d\n", max_thread);
-    printf("Min Thread Completion time %d\n", min_thread);
-    printf("Avg Thread Completion time %f\n", avg_thread);
+    printf("Max Thread completion time %d\n", max_thread);
+    printf("Min Thread completion time %d\n", min_thread);
+    printf("Avg Thread completion time %f\n", avg_thread);
     printf("Variance of Thread completion time %f\n", var_thread);
     printf("Average wait time %f\n", avg_wait);
 

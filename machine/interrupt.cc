@@ -252,12 +252,15 @@ Interrupt::Halt()
 
     printf("Machine halting!\n\n");
 
-    // Update the thread statistics
-    if(currentThread->GetPID() != 0 ){
-        DEBUG('s', "FINAL_STAT_UPDATE");
+    // FINAL_STAT_UPDATE
+    if(currentThread->GetPID() > 0 ){
+        DEBUG('s', "\nFINAL_STAT_UPDATE\n");
         stats->thread_count++;
         stats->total_wait += currentThread->wait_time;
         stats->total_thread += currentThread->total_time;
+        int completion_time = stats->totalTicks;
+        DEBUG('C', "Completion time %d\n", completion_time);
+        stats->total_completion += completion_time;
         
         // maxmimum value of thread completion
         if(stats->max_thread < currentThread->total_time) {
@@ -267,6 +270,15 @@ Interrupt::Halt()
         // minumum value of thread completion
         if(currentThread->total_time < stats->min_thread ) {
             stats->min_thread = currentThread->total_time;
+        }
+
+        // The maximum and minimum completion
+        if(completion_time > stats->max_completion) {
+            stats->max_completion = completion_time;
+        }
+
+        if(completion_time < stats->min_completion) {
+            stats->min_completion = completion_time;
         }
     }
 
