@@ -52,6 +52,7 @@ class Statistics {
     int total_completion;
     int max_completion;
     int min_completion;
+    double avg_completion;
 
     Statistics(); 		// initialize everything to zero
 
