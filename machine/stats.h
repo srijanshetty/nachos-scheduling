@@ -45,6 +45,7 @@ class Statistics {
     int min_thread;
     int thread_count;
     int total_thread;
+    long long int square_thread;
     double util;
     double avg_wait;
     double avg_thread;

@@ -35,6 +35,7 @@ Statistics::Statistics()
     avg_thread = 0.0;
     var_thread = 0.0;
     thread_count = 0;
+    square_thread = 0;
     total_completion = 0;
     max_completion = 0;
     min_completion = MAX_THREAD_TIME;
@@ -54,6 +55,8 @@ Statistics::Print()
     util = (systemTicks + userTicks)/(double)totalTicks;
     avg_thread = total_thread/(double)thread_count;
     avg_wait = total_wait/(double)thread_count;
+    square_thread = square_thread/thread_count;
+    var_thread = square_thread - avg_thread * avg_thread;
 
     avg_completion = total_completion/(double)thread_count;
     

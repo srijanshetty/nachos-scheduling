@@ -258,6 +258,8 @@ Interrupt::Halt()
         stats->thread_count++;
         stats->total_wait += currentThread->wait_time;
         stats->total_thread += currentThread->total_time;
+        stats->square_thread += currentThread->total_time * currentThread->total_time;
+
         int completion_time = stats->totalTicks;
         DEBUG('C', "Completion time %d\n", completion_time);
         stats->total_completion += completion_time;
