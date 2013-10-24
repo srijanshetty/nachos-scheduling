@@ -52,6 +52,7 @@ PreemptHandler(int dummy)
 
     // Preempt only for the algorithms greater than 3
     if(scheduler->scheduler_type >=3) {
+        currentThread->timerYield = true;
         interrupt->YieldOnReturn();
     }
 } 

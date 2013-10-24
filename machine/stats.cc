@@ -41,7 +41,8 @@ Statistics::Statistics()
     min_completion = MAX_THREAD_TIME;
     avg_completion = 0.0;
     square_completion = 0;
-    var_completion = 0.0;
+    var_completion = 0;
+    estimate_error = 0.0;
 }
 
 //----------------------------------------------------------------------
@@ -61,11 +62,13 @@ Statistics::Print()
     var_thread = square_thread - avg_thread * avg_thread;
 
     avg_completion = total_completion/(double)thread_count;
-    square_completion = (long long int)square_completion/thread_count;
-    var_completion = square_completion - avg_completion * avg_completion;
+    square_completion = (long long int)square_completion/(long long int)thread_count;
+    var_completion = square_completion - (long long int)avg_completion * (long long int)avg_completion;
     
     printf("Ticks: total %d idle %d system %d user %d util %f\n", totalTicks, 
 	idleTicks, systemTicks, userTicks, util);
+
+    printf("For RR: %f\n", (estimate_error/(double)total_cpu)); 
 
     printf("\n\nCompletion statistics\n");
     printf("Total Completion time %d\n", total_completion);
@@ -73,7 +76,7 @@ Statistics::Print()
     printf("Minimum Completion time %d\n", min_completion);
     printf("Average Completion time %f\n", avg_completion);
     printf("Square Completion time %lld\n", square_completion);
-    printf("Variance Completion time %lf\n", var_completion);
+    printf("Variance Completion time %lld\n", var_completion);
 
     printf("\nThread Statistics\n");
     printf("Thread Count %d\n", thread_count);

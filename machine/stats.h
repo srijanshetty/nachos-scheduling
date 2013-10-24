@@ -55,7 +55,8 @@ class Statistics {
     int min_completion;
     double avg_completion;
     long long int square_completion;
-    long double var_completion;
+    long long int var_completion;
+    double estimate_error;
 
     Statistics(); 		// initialize everything to zero
 

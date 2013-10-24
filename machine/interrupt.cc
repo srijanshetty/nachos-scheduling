@@ -263,9 +263,10 @@ Interrupt::Halt()
         int completion_time = stats->totalTicks;
         stats->total_completion += completion_time;
         stats->square_completion += (long long int)completion_time * (long long int)completion_time;
-        DEBUG('C', "Completion time %d square Completion %lld\n", completion_time, 
+        DEBUG('C', "Thread %d Completion time %d square Completion %lld\n", 
+                currentThread->GetPID(), completion_time, 
                 stats->square_completion);
-        
+
         // maxmimum value of thread completion
         if(stats->max_thread < currentThread->total_time) {
             stats->max_thread = currentThread->total_time;

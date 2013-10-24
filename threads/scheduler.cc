@@ -82,6 +82,19 @@ Scheduler::ReadyToRun (Thread *thread)
                 thread->cpu_burst_estimate,
                 thread->cpu_burst_previous);
 
+        // Only for non zero bursts
+        if(thread->cpu_burst_previous > 0) {
+            int error;
+            error = thread->cpu_burst_previous - estimate;
+
+            // This is to check for negative estimate errors
+            if (error < 0 ) {
+                error = error * -1;
+            }
+
+            stats->estimate_error += error;
+        }
+
         thread->cpu_burst_estimate = estimate;
 
         // Add to the readyList

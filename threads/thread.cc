@@ -406,7 +406,8 @@ Thread::Exit (bool terminateSim, int exitcode)
         int completion_time = stats->totalTicks;
         stats->total_completion += completion_time;
         stats->square_completion += (long long int)completion_time * (long long int)completion_time;
-        DEBUG('C', "Completion time %d square Completion %lld\n", completion_time, 
+        DEBUG('C', "Thread %d Completion time %d square Completion %lld\n", 
+                currentThread->GetPID(), completion_time, 
                 stats->square_completion);
         
         // maxmimum value of thread completion
@@ -520,9 +521,10 @@ Thread::Yield ()
     nextThread = scheduler->FindNextToRun();
 
     if (nextThread != NULL) {
-        if(!timerYield) {
-            scheduler->ReadyToRun(this);
+        if(timerYield) {
             timerYield = false;
+        } else {
+            scheduler->ReadyToRun(this);
         }
         scheduler->Run(nextThread);
     }
