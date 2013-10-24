@@ -404,8 +404,10 @@ Thread::Exit (bool terminateSim, int exitcode)
         stats->square_thread += currentThread->total_time * currentThread->total_time;
 
         int completion_time = stats->totalTicks;
-        DEBUG('C', "Completion time %d\n", completion_time);
         stats->total_completion += completion_time;
+        stats->square_completion += (long long int)completion_time * (long long int)completion_time;
+        DEBUG('C', "Completion time %d square Completion %lld\n", completion_time, 
+                stats->square_completion);
         
         // maxmimum value of thread completion
         if(stats->max_thread < currentThread->total_time) {

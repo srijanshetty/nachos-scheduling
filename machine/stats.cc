@@ -40,6 +40,8 @@ Statistics::Statistics()
     max_completion = 0;
     min_completion = MAX_THREAD_TIME;
     avg_completion = 0.0;
+    square_completion = 0;
+    var_completion = 0.0;
 }
 
 //----------------------------------------------------------------------
@@ -59,6 +61,8 @@ Statistics::Print()
     var_thread = square_thread - avg_thread * avg_thread;
 
     avg_completion = total_completion/(double)thread_count;
+    square_completion = (long long int)square_completion/thread_count;
+    var_completion = square_completion - avg_completion * avg_completion;
     
     printf("Ticks: total %d idle %d system %d user %d util %f\n", totalTicks, 
 	idleTicks, systemTicks, userTicks, util);
@@ -68,6 +72,8 @@ Statistics::Print()
     printf("Maximum Completion time %d\n", max_completion);
     printf("Minimum Completion time %d\n", min_completion);
     printf("Average Completion time %f\n", avg_completion);
+    printf("Square Completion time %lld\n", square_completion);
+    printf("Variance Completion time %lf\n", var_completion);
 
     printf("\nThread Statistics\n");
     printf("Thread Count %d\n", thread_count);

@@ -54,6 +54,8 @@ class Statistics {
     int max_completion;
     int min_completion;
     double avg_completion;
+    long long int square_completion;
+    long double var_completion;
 
     Statistics(); 		// initialize everything to zero
 
